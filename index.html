@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <title>Countryball Marble Race</title>
+    <style>
+        body {
+            background-color: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        canvas {
+            background: #333;
+            border: 4px solid #555;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        #ui {
+            margin-top: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #45a049; }
+        #leaderboard {
+            margin-top: 15px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Countryball Sacīkšu Eliminācija</h1>
+    <canvas id="raceCanvas" width="500" height="600"></canvas>
+    
+    <div id="ui">
+        <button onclick="startRace()">Palaist bumbiņas</button>
+        <div id="leaderboard">Gatavs startam!</div>
+    </div>
+
+<script>
+const canvas = document.getElementById('raceCanvas');
+const ctx = canvas.getContext('2d');
+const leaderboard = document.getElementById('leaderboard');
+
+const gravity = 0.15;
+const bounce = 0.5;
+
+// Sākotnējais valstu saraksts ar krāsām (var aizvietot ar attēliem vēlāk)
+let countries = [
+    { name: "Latvija", color: "#9e3039", text: "🇱🇻" },
+    { name: "Lietuva", color: "#fdb913", text: "🇱🇹" },
+    { name: "Igaunija", color: "#4891d9", text: "🇪🇪" },
+    { name: "Somija", color: "#ffffff", text: "🇫🇮" },
+    { name: "Vācija", color: "#ffce00", text: "🇩🇪" }
+];
+
+let marbles = [];
+let finishedMarbles = [];
+let obstacles = [];
+let raceRunning = false;
+
+// Izveido šķēršļus (trijstūri / tapas un līnijas)
+function createMap() {
+    obstacles = [];
+    // Rindu izkārtojums tapām (Pegs) kā īstā "Plinko" vai bumbiņu trasē
+    for (let row = 0; row < 5; row++) {
+        let cols = row % 2 === 0 ? 6 : 5;
+        let xOffset = row % 2 === 0 ? 40 : 75;
+        for (let col = 0; col < cols; col++) {
+            obstacles.push({
+                x: xOffset + col * 80,
+                y: 150 + row * 70,
+                radius: 8
+            });
+        }
+    }
+}
+
+// Inicializē bumbiņas
+function setupMarbles() {
+    marbles = countries.map((country, index) => ({
+        ...country,
+        x: 200 + (index * 25) + Math.random() * 10,
+        y: 50,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 0,
+        radius: 16,
+        isFinished: false
+    }));
+    finishedMarbles = [];
+}
+
+function startRace() {
+    if (raceRunning) return;
+    if (countries.length <= 1) {
+        leaderboard.innerHTML = `Spēle beigusies! Uzvarētājs ir 👑 ${countries[0].name}!`;
+        return;
+    }
+    setupMarbles();
+    createMap();
+    raceRunning = true;
+    leaderboard.innerHTML = "Sacīkstes norit...";
+    update();
+}
+
+function update() {
+    if (!raceRunning) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Zīmē finiša līniju
+    ctx.fillStyle = "#555";
+    ctx.fillRect(0, canvas.height - 80, canvas.width, 10);
+    ctx.fillStyle = "#fff";
+    ctx.font = "14px Arial";
+    ctx.fillText("FINIŠA ZONA", canvas.width / 2 - 40, canvas.height - 55);
+
+    // Zīmē šķēršļus
+    ctx.fillStyle = "#888";
+    obstacles.forEach(obs => {
+        ctx.beginPath();
+        ctx.arc(obs.x, obs.y, obs.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+    });
+
+    // Kustina un zīmē bumbiņas (Countryballs)
+    marbles.forEach(m => {
+        if (m.isFinished) return;
+
+        // Fizikas kalkulācija
+        m.vy += gravity;
+        m.x += m.vx;
+        m.y += m.vy;
+
+        // Sadursme ar sienām
+        if (m.x - m.radius < 0) { m.x = m.radius; m.vx *= -bounce; }
+        if (m.x + m.radius > canvas.width) { m.x = canvas.width - m.radius; m.vx *= -bounce; }
+
+        // Sadursme ar šķēršļiem
+        obstacles.forEach(obs => {
+            let dx = m.x - obs.x;
+            let dy = m.y - obs.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < m.radius + obs.radius) {
+                // Atlekšanas leņķis
+                let angle = Math.atan2(dy, dx);
+                m.x = obs.x + (m.radius + obs.radius) * Math.cos(angle);
+                m.y = obs.y + (m.radius + obs.radius) * Math.sin(angle);
+                
+                // Maina ātrumu pēc sadursmes + pieliek mazuliet nejaušības efektu
+                let speed = Math.sqrt(m.vx * m.vx + m.vy * m.vy) * bounce;
+                m.vx = Math.cos(angle) * speed + (Math.random() - 0.5);
+                m.vy = Math.sin(angle) * speed;
+            }
+        });
+
+        // Finiša sasniegšana
+        if (m.y >= canvas.height - 80) {
+            m.isFinished = true;
+            finishedMarbles.push(m);
+        }
+
+        // Zīmē Countryball bumbu
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
+        ctx.fillStyle = m.color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#000";
+        ctx.stroke();
+        ctx.closePath();
+
+        // Iezīmē emodži kā karogu
+        ctx.fillStyle = "white";
+        ctx.font = "16px Arial";
+        ctx.fillText(m.text, m.x - 10, m.y + 6);
+    });
+
+    // Pārbauda vai visas (vai gandrīz visas) ir finišējušas
+    if (finishedMarbles.length === countries.length) {
+        raceRunning = false;
+        handleElimination();
+        return;
+    }
+
+    requestAnimationFrame(update);
+}
+
+function handleElimination() {
+    // Pēdējā bumbiņa sarakstā ir tā, kas finišēja pēdējā
+    let loser = finishedMarbles[finishedMarbles.length - 1];
+    
+    // Izmet zaudētāju no galvenā valstu saraksta nākajai kārtai
+    countries = countries.filter(c => c.name !== loser.name);
+
+    if (countries.length > 1) {
+        leaderboard.innerHTML = `❌ <b>${loser.name}</b> palika pēdējā un tiek eliminēta!<br>Palikušas ${countries.length} valstis. Spied pogu vēlreiz!`;
+    } else {
+        leaderboard.innerHTML = `🎉 Spēle beigusies! Zaudēja ${loser.name}. <br>👑 <b>UZVARĒTĀJS IR ${countries[0].name}!</b>`;
+    }
+}
+</script>
+
+</body>
+</html>
