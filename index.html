@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="lv">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pasaules Eliminācijas Turnīrs — Pro Mobile</title>
+    <title>World Elimination Tournament — Pro Mobile</title>
     <style>
         :root {
             --bg-color: #121214;
@@ -37,7 +37,6 @@
             text-align: center;
         }
 
-        /* Responsīvs trīs kolonnu izkārtojums, kas pielāgots horizontālam ekrānam */
         .game-layout {
             display: flex;
             max-width: 100%;
@@ -47,7 +46,6 @@
             height: calc(100vh - 50px);
         }
 
-        /* Kreisais panelis iestatījumiem */
         .left-panel {
             flex: 1;
             min-width: 200px;
@@ -63,7 +61,6 @@
             font-size: 12px;
         }
 
-        /* Centrs ar Canvas spēles laukumu */
         .center-panel {
             flex: 2;
             display: flex;
@@ -72,7 +69,6 @@
             justify-content: center;
         }
 
-        /* Labais panelis izslēgšanas vēsturei */
         .right-panel {
             flex: 1;
             min-width: 220px;
@@ -132,7 +128,6 @@
             text-align: left;
         }
 
-        /* Canvas automātiski mērogojas pēc ekrāna augstuma un platuma */
         canvas {
             background: #1e1e24;
             border: 1px solid #2d2d35;
@@ -210,7 +205,6 @@
         .highlight-win { color: var(--accent-green); font-weight: bold; }
         .highlight-map { color: #888; font-size: 10px; }
 
-        /* OBLIGĀTĀ HORIZONTĀLĀ REŽĪMA BRĪDINĀJUMS (OVERLAY) */
         #turnDeviceOverlay {
             display: none;
             position: fixed;
@@ -226,7 +220,6 @@
             box-sizing: border-box;
         }
 
-        /* Ja ekrāns ir vertikāls (Portrait), parādām rotācijas brīdinājumu un paslēpjam spēli */
         @media screen and (orientation: portrait) {
             #turnDeviceOverlay {
                 display: flex;
@@ -241,26 +234,26 @@
 
 <div id="turnDeviceOverlay">
     <div style="font-size: 45px; transform: rotate(-90deg); margin-bottom: 15px;">📱➔📟</div>
-    <h2 style="margin: 5px 0;">Lūdzu, pagrieziet ierīci!</h2>
-    <p style="color: #888; font-size: 14px; max-width: 280px; margin: 5px auto 0 auto;">Lai redzētu sacensības un rezultātu tabulu pilnvērtīgi, ir nepieciešams horizontālais režīms.</p>
+    <h2 style="margin: 5px 0;">Please rotate your device!</h2>
+    <p style="color: #888; font-size: 14px; max-width: 280px; margin: 5px auto 0 auto;">Landscape mode is required to display the simulation and results panel properly.</p>
 </div>
 
-<h1>Pasaules Eliminācijas Turnīrs</h1>
+<h1>World Elimination Tournament</h1>
 
 <div class="game-layout">
     <div class="left-panel">
-        <div class="panel-title">Iestatījumi</div>
+        <div class="panel-title">Settings</div>
         <div id="predictionArea">
-            <label for="countryPredict">Tava prognoze:</label>
-            <select id="countryPredict"><option value="">Izvēlies...</option></select>
+            <label for="countryPredict">Your Prediction:</label>
+            <select id="countryPredict"><option value="">Choose...</option></select>
         </div>
 
-        <div id="eventDisplay">Sistēma gatava.</div>
+        <div id="eventDisplay">System ready.</div>
         
-        <button onclick="startRace()">Sākt raundu</button>
+        <button onclick="startRace()">Start Round</button>
         
-        <div class="panel-title">Raunda Statuss</div>
-        <div id="roundStatusLog">Gatavs jaunam skrējienam.</div>
+        <div class="panel-title">Round Status</div>
+        <div id="roundStatusLog">Ready for a new run.</div>
     </div>
 
     <div class="center-panel">
@@ -268,8 +261,8 @@
     </div>
 
     <div class="right-panel">
-        <div class="panel-title">Izslēgšanas Secība</div>
-        <div id="eliminationHistory">Saraksts ir tukšs.</div>
+        <div class="panel-title">Elimination History</div>
+        <div id="eliminationHistory">The list is empty.</div>
     </div>
 </div>
 
@@ -292,52 +285,52 @@ let particles = [];
 let roundBlocksHTML = []; 
 
 let countries = [
-    { code: "af", name: "Afganistāna" }, { code: "al", name: "Albānija" }, { code: "dz", name: "Alžīrija" }, { code: "ad", name: "Andora" }, { code: "ao", name: "Angola" },
-    { code: "ag", name: "Antigva un Barbuda" }, { code: "ar", name: "Argentīna" }, { code: "am", name: "Armēnija" }, { code: "au", name: "Austrālija" }, { code: "at", name: "Austrija" },
-    { code: "az", name: "Azerbaidžāna" }, { code: "bs", name: "Bahamu Salas" }, { code: "bh", name: "Bahreina" }, { code: "bd", name: "Bangladeša" }, { code: "bb", name: "Barbadosa" },
-    { code: "by", name: "Baltkrievija" }, { code: "be", name: "Beļģija" }, { code: "bz", name: "Beliza" }, { code: "bj", name: "Benina" }, { code: "bt", name: "Butāna" },
-    { code: "bo", name: "Bolīvija" }, { code: "ba", name: "Bosnija un Hercegovina" }, { code: "bw", name: "Botsvāna" }, { code: "br", name: "Brazīlija" }, { code: "bn", name: "Bruneja" },
-    { code: "bg", name: "Bulgārija" }, { code: "bf", name: "Burkinafaso" }, { code: "bi", name: "Burundi" }, { code: "kh", name: "Kambodža" }, { code: "cm", name: "Kamerūna" },
-    { code: "ca", name: "Kanāda" }, { code: "cv", name: "Kaboverde" }, { code: "cf", name: "Centrālāfrikas Republika" }, { code: "td", name: "Čada" }, { code: "cl", name: "Čīle" },
-    { code: "cn", name: "Ķīna" }, { code: "co", name: "Kolumbija" }, { code: "km", name: "Komoras" }, { code: "cg", name: "Kongo (Brazavila)" }, { code: "cd", name: "Kongo (Kinšasa)" },
-    { code: "cr", name: "Kostarika" }, { code: "ci", name: "Kotdivuāra" }, { code: "hr", name: "Horvātija" }, { code: "cu", name: "Kuba" }, { code: "cy", name: "Kipra" },
-    { code: "cz", name: "Čehija" }, { code: "dk", name: "Dānija" }, { code: "dj", name: "Džibuti" }, { code: "dm", name: "Dominika" }, { code: "do", name: "Dominikāna" },
-    { code: "ec", name: "Ekvadora" }, { code: "eg", name: "Ēģipte" }, { code: "sv", name: "Elsalvadora" }, { code: "gq", name: "Ekvatoriālā Gvineja" }, { code: "er", name: "Eritreja" },
-    { code: "ee", name: "Igaunija" }, { code: "sz", name: "Esvatīni" }, { code: "et", name: "Etiopija" }, { code: "fj", name: "Fidži" }, { code: "fi", name: "Somija" },
-    { code: "fr", name: "Francija" }, { code: "ga", name: "Gabona" }, { code: "gm", name: "Gambija" }, { code: "ge", name: "Gruzija" }, { code: "de", name: "Vācija" },
-    { code: "gh", name: "Gana" }, { code: "gr", name: "Grieķija" }, { code: "gd", name: "Grenāda" }, { code: "gt", name: "Gvatemala" }, { code: "gn", name: "Gvineja" },
-    { code: "gw", name: "Gvineja-Bisava" }, { code: "gy", name: "Gajāna" }, { code: "ht", name: "Haiti" }, { code: "hn", name: "Hondurasa" }, { code: "hu", name: "Ungārija" },
-    { code: "is", name: "Islande" }, { code: "in", name: "Indija" }, { code: "id", name: "Indonēzija" }, { code: "ir", name: "Irāna" }, { code: "iq", name: "Irāka" },
-    { code: "ie", name: "Īrija" }, { code: "il", name: "Izraēla" }, { code: "it", name: "Itālija" }, { code: "jm", name: "Jamaika" }, { code: "jp", name: "Japāna" },
-    { code: "jo", name: "Jordānija" }, { code: "kz", name: "Kazahstāna" }, { code: "ke", name: "Kenija" }, { code: "ki", name: "Kiribati" }, { code: "kp", name: "Ziemeļkoreja" },
-    { code: "kr", name: "Dienvidkoreja" }, { code: "kw", name: "Kuveita" }, { code: "kg", name: "Kirgizstāna" }, { code: "la", name: "Laosa" }, { code: "lv", name: "Latvija" },
-    { code: "lb", name: "Libāna" }, { code: "ls", name: "Lesoto" }, { code: "lr", name: "Libērija" }, { code: "ly", name: "Lībija" }, { code: "li", name: "Lihtenšteina" },
-    { code: "lt", name: "Lietuva" }, { code: "lu", name: "Luksemburga" }, { code: "mg", name: "Madagaskara" }, { code: "mw", name: "Malāvija" }, { code: "my", name: "Malaizija" },
-    { code: "mv", name: "Maldivu Salas" }, { code: "ml", name: "Mali" }, { code: "mt", name: "Malta" }, { code: "mh", name: "Maršala Salas" }, { code: "mr", name: "Mauritānija" },
-    { code: "mu", name: "Maurīcija" }, { code: "mx", name: "Meksika" }, { code: "fm", name: "Mikronēzija" }, { code: "md", name: "Moldova" }, { code: "mc", name: "Monako" },
-    { code: "mn", name: "Mongolija" }, { code: "me", name: "Melnkalne" }, { code: "ma", name: "Maroka" }, { code: "mz", name: "Mocambika" }, { code: "mm", name: "Mjanma" },
-    { code: "na", name: "Namībija" }, { code: "nr", name: "Nauru" }, { code: "np", name: "Nepāla" }, { code: "nl", name: "Nīderlande" }, { code: "nz", name: "Jaunzēlande" },
-    { code: "ni", name: "Nikaragva" }, { code: "ne", name: "Nīgera" }, { code: "ng", name: "Nigērija" }, { code: "mk", name: "Ziemeļmaķedonija" }, { code: "no", name: "Norvēģija" },
-    { code: "om", name: "Omāna" }, { code: "pk", name: "Pakistāna" }, { code: "pw", name: "Palau" }, { code: "pa", name: "Panama" }, { code: "pg", name: "Papua-Jaungvineja" },
-    { code: "py", name: "Paragvaja" }, { code: "pe", name: "Peru" }, { code: "ph", name: "Filipīnas" }, { code: "pl", name: "Polija" }, { code: "pt", name: "Portugāle" },
-    { code: "qa", name: "Katara" }, { code: "ro", name: "Rumānija" }, { code: "ru", name: "Krievija" }, { code: "rw", name: "Ruanda" }, { code: "kn", name: "Sentkitsa un Nevisa" },
-    { code: "lc", name: "Sentlūsija" }, { code: "vc", name: "Sentvinsenta" }, { code: "ws", name: "Samoa" }, { code: "sm", name: "Sanmarīno" }, { code: "st", name: "Santome un Prinsipi" },
-    { code: "sa", name: "Saūda Arābija" }, { code: "sn", name: "Senegāla" }, { code: "rs", name: "Serbija" }, { code: "sc", name: "Seišelu Salas" }, { code: "sl", name: "Sjerraleone" },
-    { code: "sg", name: "Singapūra" }, { code: "sk", name: "Slovākija" }, { code: "si", name: "Slovēnija" }, { code: "sb", name: "Sālamana Salas" }, { code: "so", name: "Somālija" },
-    { code: "za", name: "Dienvidāfrika" }, { code: "ss", name: "Dienvidsudāna" }, { code: "es", name: "Spānija" }, { code: "lk", name: "Šrilanka" }, { code: "sd", name: "Sudāna" },
-    { code: "sr", name: "Surinama" }, { code: "se", name: "Zviedrija" }, { code: "ch", name: "Šveice" }, { code: "sy", name: "Sīrija" }, { code: "tw", name: "Taivāna" },
-    { code: "tj", name: "Tadžikistāna" }, { code: "tz", name: "Tanzānija" }, { code: "th", name: "Taizeme" }, { code: "tl", name: "Timora" }, { code: "tg", name: "Togo" },
-    { code: "to", name: "Tonga" }, { code: "tt", name: "Trinidadas un Tobāgo" }, { code: "tn", name: "Tunisija" }, { code: "tr", name: "Turcija" }, { code: "tm", name: "Turkmenistāna" },
-    { code: "tv", name: "Tuvalu" }, { code: "ug", name: "Uganda" }, { code: "ua", name: "Ukraina" }, { code: "ae", name: "AAE" }, { code: "gb", name: "Apvienotā Karaliste" },
-    { code: "us", name: "ASV" }, { code: "uy", name: "Urugvaja" }, { code: "uz", name: "Uzbekistāna" }, { code: "vu", name: "Vanuatu" }, { code: "va", name: "Vatikāns" },
-    { code: "ve", name: "Venesuela" }, { code: "vn", name: "Vjetnama" }, { code: "ye", name: "Jemena" }, { code: "zm", name: "Zambija" }, { code: "zw", name: "Zimbabve" }
+    { code: "af", name: "Afghanistan" }, { code: "al", name: "Albania" }, { code: "dz", name: "Algeria" }, { code: "ad", name: "Andorra" }, { code: "ao", name: "Angola" },
+    { code: "ag", name: "Antigua and Barbuda" }, { code: "ar", name: "Argentina" }, { code: "am", name: "Armenia" }, { code: "au", name: "Australia" }, { code: "at", name: "Austria" },
+    { code: "az", name: "Azerbaijan" }, { code: "bs", name: "Bahamas" }, { code: "bh", name: "Bahrain" }, { code: "bd", name: "Bangladesh" }, { code: "bb", name: "Barbados" },
+    { code: "by", name: "Belarus" }, { code: "be", name: "Belgium" }, { code: "bz", name: "Belize" }, { code: "bj", name: "Benin" }, { code: "bt", name: "Bhutan" },
+    { code: "bo", name: "Bolivia" }, { code: "ba", name: "Bosnia and Herzegovina" }, { code: "bw", name: "Botswana" }, { code: "br", name: "Brazil" }, { code: "bn", name: "Brunei" },
+    { code: "bg", name: "Bulgaria" }, { code: "bf", name: "Burkina Faso" }, { code: "bi", name: "Burundi" }, { code: "kh", name: "Cambodia" }, { code: "cm", name: "Cameroon" },
+    { code: "ca", name: "Canada" }, { code: "cv", name: "Cape Verde" }, { code: "cf", name: "Central African Republic" }, { code: "td", name: "Chad" }, { code: "cl", name: "Chile" },
+    { code: "cn", name: "China" }, { code: "co", name: "Colombia" }, { code: "km", name: "Comoros" }, { code: "cg", name: "Congo" }, { code: "cd", name: "DR Congo" },
+    { code: "cr", name: "Costa Rica" }, { code: "ci", name: "Ivory Coast" }, { code: "hr", name: "Croatia" }, { code: "cu", name: "Cuba" }, { code: "cy", name: "Cyprus" },
+    { code: "cz", name: "Czech Republic" }, { code: "dk", name: "Denmark" }, { code: "dj", name: "Djibouti" }, { code: "dm", name: "Dominica" }, { code: "do", name: "Dominican Republic" },
+    { code: "ec", name: "Ecuador" }, { code: "eg", name: "Egypt" }, { code: "sv", name: "El Salvador" }, { code: "gq", name: "Equatorial Guinea" }, { code: "er", name: "Eritrea" },
+    { code: "ee", name: "Estonia" }, { code: "sz", name: "Eswatini" }, { code: "et", name: "Ethiopia" }, { code: "fj", name: "Fiji" }, { code: "fi", name: "Finland" },
+    { code: "fr", name: "France" }, { code: "ga", name: "Gabon" }, { code: "gm", name: "Gambia" }, { code: "ge", name: "Georgia" }, { code: "de", name: "Germany" },
+    { code: "gh", name: "Ghana" }, { code: "gr", name: "Greece" }, { code: "gd", name: "Grenada" }, { code: "gt", name: "Guatemala" }, { code: "gn", name: "Guinea" },
+    { code: "gw", name: "Guinea-Bissau" }, { code: "gy", name: "Guyana" }, { code: "ht", name: "Haiti" }, { code: "hn", name: "Honduras" }, { code: "hu", name: "Hungary" },
+    { code: "is", name: "Iceland" }, { code: "in", name: "India" }, { code: "id", name: "Indonesia" }, { code: "ir", name: "Iran" }, { code: "iq", name: "Iraq" },
+    { code: "ie", name: "Ireland" }, { code: "il", name: "Israel" }, { code: "it", name: "Italy" }, { code: "jm", name: "Jamaica" }, { code: "jp", name: "Japan" },
+    { code: "jo", name: "Jordan" }, { code: "kz", name: "Kazakhstan" }, { code: "ke", name: "Kenya" }, { code: "ki", name: "Kiribati" }, { code: "kp", name: "North Korea" },
+    { code: "kr", name: "South Korea" }, { code: "kw", name: "Kuwait" }, { code: "kg", name: "Kyrgyzstan" }, { code: "la", name: "Laos" }, { code: "lv", name: "Latvia" },
+    { code: "lb", name: "Lebanon" }, { code: "ls", name: "Lesotho" }, { code: "lr", name: "Liberia" }, { code: "ly", name: "Libya" }, { code: "li", name: "Liechtenstein" },
+    { code: "lt", name: "Lithuania" }, { code: "lu", name: "Luxembourg" }, { code: "mg", name: "Madagascar" }, { code: "mw", name: "Malawi" }, { code: "my", name: "Malaysia" },
+    { code: "mv", name: "Maldives" }, { code: "ml", name: "Mali" }, { code: "mt", name: "Malta" }, { code: "mh", name: "Marshall Islands" }, { code: "mr", name: "Mauritania" },
+    { code: "mu", name: "Mauritius" }, { code: "mx", name: "Mexico" }, { code: "fm", name: "Micronesia" }, { code: "md", name: "Moldova" }, { code: "mc", name: "Monaco" },
+    { code: "mn", name: "Mongolia" }, { code: "me", name: "Montenegro" }, { code: "ma", name: "Morocco" }, { code: "mz", name: "Mozambique" }, { code: "mm", name: "Myanmar" },
+    { code: "na", name: "Namibia" }, { code: "nr", name: "Nauru" }, { code: "np", name: "Nepal" }, { code: "nl", name: "Netherlands" }, { code: "nz", name: "New Zealand" },
+    { code: "ni", name: "Nicaragua" }, { code: "ne", name: "Niger" }, { code: "ng", name: "Nigeria" }, { code: "mk", name: "North Macedonia" }, { code: "no", name: "Norway" },
+    { code: "om", name: "Oman" }, { code: "pk", name: "Pakistan" }, { code: "pw", name: "Palau" }, { code: "pa", name: "Panama" }, { code: "pg", name: "Papua New Guinea" },
+    { code: "py", name: "Paraguay" }, { code: "pe", name: "Peru" }, { code: "ph", name: "Philippines" }, { code: "pl", name: "Poland" }, { code: "pt", name: "Portugal" },
+    { code: "qa", name: "Qatar" }, { code: "ro", name: "Romania" }, { code: "ru", name: "Russia" }, { code: "rw", name: "Rwanda" }, { code: "kn", name: "Saint Kitts and Nevis" },
+    { code: "lc", name: "Saint Lucia" }, { code: "vc", name: "Saint Vincent" }, { code: "ws", name: "Samoa" }, { code: "sm", name: "San Marino" }, { code: "st", name: "Sao Tome and Principe" },
+    { code: "sa", name: "Saudi Arabia" }, { code: "sn", name: "Senegal" }, { code: "rs", name: "Serbia" }, { code: "sc", name: "Seychelles" }, { code: "sl", name: "Sierra Leone" },
+    { code: "sg", name: "Singapore" }, { code: "sk", name: "Slovakia" }, { code: "si", name: "Slovenia" }, { code: "sb", name: "Solomon Islands" }, { code: "so", name: "Somalia" },
+    { code: "za", name: "South Africa" }, { code: "ss", name: "South Sudan" }, { code: "es", name: "Spain" }, { code: "lk", name: "Sri Lanka" }, { code: "sd", name: "Sudan" },
+    { code: "sr", name: "Suriname" }, { code: "se", name: "Sweden" }, { code: "ch", name: "Switzerland" }, { code: "sy", name: "Syria" }, { code: "tw", name: "Taiwan" },
+    { code: "tj", name: "Tajikistan" }, { code: "tz", name: "Tanzania" }, { code: "th", name: "Thailand" }, { code: "tl", name: "Timor-Leste" }, { code: "tg", name: "Togo" },
+    { code: "to", name: "Tonga" }, { code: "tt", name: "Trinidad and Tobago" }, { code: "tn", name: "Tunisia" }, { code: "tr", name: "Turkey" }, { code: "tm", name: "Turkmenistan" },
+    { code: "tv", name: "Tuvalu" }, { code: "ug", name: "Uganda" }, { code: "ua", name: "Ukraine" }, { code: "ae", name: "UAE" }, { code: "gb", name: "United Kingdom" },
+    { code: "us", name: "USA" }, { code: "uy", name: "Uruguay" }, { code: "uz", name: "Uzbekistan" }, { code: "vu", name: "Vanuatu" }, { code: "va", name: "Vatican City" },
+    { code: "ve", name: "Venezuela" }, { code: "vn", name: "Vietnam" }, { code: "ye", name: "Yemen" }, { code: "zm", name: "Zambia" }, { code: "zw", name: "Zimbabwe" }
 ];
 
 let marbles = []; let finishedMarbles = []; let obstacles = []; let raceRunning = false; let flagImages = {};
 
 function updatePredictSelect() {
     let currentChosen = countryPredictSelect.value;
-    countryPredictSelect.innerHTML = '<option value="">Izvēlies valsti...</option>';
+    countryPredictSelect.innerHTML = '<option value="">Choose a country...</option>';
     let sorted = [...countries].sort((a,b) => a.name.localeCompare(b.name));
     sorted.forEach(c => {
         let opt = document.createElement('option'); opt.value = c.code; opt.innerText = c.name;
@@ -357,7 +350,7 @@ function preloadFlags(callback) {
 }
 
 preloadFlags(() => {
-    roundStatusLog.innerHTML = `Sistēma pilnībā gatava raundam.`;
+    roundStatusLog.innerHTML = `System fully ready for the round.`;
     updatePredictSelect();
     rollNextEvent();
 });
@@ -388,55 +381,55 @@ function createRandomMap() {
     const mapID = Math.floor(Math.random() * 10);
 
     if (mapID === 0) {
-        currentLevelName = "1. Pīlāru Haoss";
+        currentLevelName = "1. Pillar Chaos";
         for (let i = 0; i < 6; i++) {
             for (let j = 0; j < 6; j++) obstacles.push({ x: 130 + i * 110, y: 220 + j * 65, radius: 10 });
         }
     } else if (mapID === 1) {
-        currentLevelName = "2. Dubultais Piltuves Slazds";
+        currentLevelName = "2. Double Funnel Trap";
         obstacles.push({ x: 250, y: 250, radius: 90 }, { x: 550, y: 250, radius: 90 }, { x: 400, y: 440, radius: 70 });
         for (let i = 0; i < 6; i++) obstacles.push({ x: 100 + i * 120, y: 590, radius: 8 });
     } else if (mapID === 2) {
-        currentLevelName = "3. Dimantu Kaskāde";
+        currentLevelName = "3. Diamond Cascade";
         let rows = [4, 5, 4, 3];
         rows.forEach((count, rIdx) => {
             let startX = 400 - ((count - 1) * 50);
             for (let c = 0; c < count; c++) obstacles.push({ x: startX + c * 100, y: 230 + rIdx * 90, radius: 14 });
         });
     } else if (mapID === 3) {
-        currentLevelName = "4. Mega Zig-Zag Labirints";
+        currentLevelName = "4. Mega Zig-Zag Labyrinth";
         obstacles.push({ x: 180, y: 240, radius: 85 }, { x: 620, y: 380, radius: 85 }, { x: 180, y: 520, radius: 85 });
         for (let i = 0; i < 4; i++) obstacles.push({ x: 400, y: 280 + i * 90, radius: 9 });
     } else if (mapID === 4) {
-        currentLevelName = "5. Plinko Siena";
+        currentLevelName = "5. Plinko Wall";
         for (let r = 0; r < 7; r++) {
             let cols = r % 2 === 0 ? 9 : 8; let xOff = r % 2 === 0 ? 60 : 105;
             for (let c = 0; c < cols; c++) obstacles.push({ x: xOff + c * 85, y: 220 + r * 55, radius: 6 });
         }
     } else if (mapID === 5) {
-        currentLevelName = "6. Krusta Šķērsļi";
+        currentLevelName = "6. Cross Obstacles";
         for (let i = 0; i < 7; i++) {
             obstacles.push({ x: 140 + i * 85, y: 350, radius: 12 }, { x: 400, y: 200 + i * 55, radius: 12 });
         }
     } else if (mapID === 6) {
-        currentLevelName = "7. Šaurie Gaiteņi";
+        currentLevelName = "7. Narrow Corridors";
         for (let i = 1; i < 5; i++) {
             obstacles.push({ x: i * 160, y: 250, radius: 35 }, { x: i * 160 - 80, y: 450, radius: 35 });
         }
     } else if (mapID === 7) {
-        currentLevelName = "8. Centrālais Gredzens";
+        currentLevelName = "8. Central Ring";
         for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
             obstacles.push({ x: 400 + Math.cos(a) * 140, y: 380 + Math.sin(a) * 140, radius: 11 });
         }
         obstacles.push({ x: 400, y: 380, radius: 25 });
     } else if (mapID === 8) {
-        currentLevelName = "9. Viļņveida Sienas";
+        currentLevelName = "9. Wave Walls";
         for (let x = 50; x < 800; x += 90) {
             let waveY = 350 + Math.sin(x * 0.02) * 120;
             obstacles.push({ x: x, y: waveY, radius: 16 }, { x: x, y: waveY - 130, radius: 9 });
         }
     } else {
-        currentLevelName = "10. Sadursmes Lielie Bloki";
+        currentLevelName = "10. Large Collision Blocks";
         obstacles.push({ x: 150, y: 300, radius: 60 }, { x: 400, y: 220, radius: 50 }, { x: 650, y: 300, radius: 60 });
     }
 }
@@ -446,23 +439,23 @@ function rollNextEvent() {
     let dice = Math.random();
     if (countries.length > 50 && dice < 0.35) {
         currentEvent = "top30";
-        eventDisplay.innerHTML = "🏆 REŽĪMS: Tikai <b>TOP 30</b> finišē! Pārējie uzsprāgst uzreiz!";
+        eventDisplay.innerHTML = "🏆 MODE: Only the <b>TOP 30</b> finish! The rest explode immediately!";
     } else if (countries.length > 25 && dice >= 0.35 && dice < 0.65) {
         currentEvent = "half";
-        eventDisplay.innerHTML = "🪓 REŽĪMS: Pusītes slazds! Tiklīdz <b>50%</b> finišē, pārējie uzsprāgst!";
+        eventDisplay.innerHTML = "🪓 MODE: Sudden Half Cut! Once <b>50%</b> finish, the rest explode!";
     } else if (countries.length > 5 && dice >= 0.65 && dice < 0.85) {
         currentEvent = "triple";
-        eventDisplay.innerHTML = "❌ REŽĪMS: Trīskāršais apdraudējums. Pēdējās 3 bumbas pamet spēli.";
+        eventDisplay.innerHTML = "❌ MODE: Triple Threat. The last 3 marbles leave the game.";
     } else {
         currentEvent = "normal";
-        eventDisplay.innerHTML = "🛡️ REŽĪMS: Standarta izslēgšana. Tikai pati pēdējā valsts izkrīt.";
+        eventDisplay.innerHTML = "🛡️ MODE: Standard Elimination. Only the very last country is eliminated.";
     }
 }
 
 function startRace() {
     if (raceRunning) return;
     if (countries.length <= 1) {
-        roundStatusLog.innerHTML = `Čempionāts ir pabeigts!`;
+        roundStatusLog.innerHTML = `The tournament is finished!`;
         return;
     }
     
@@ -572,7 +565,7 @@ function writeEliminationBlock(roundNum, mapName, orderedLosers) {
     }).join('');
 
     let block = `<div class="round-block">
-                    <div class="round-block-title">Raunds ${roundNum} <span class="highlight-map">(${mapName})</span></div>
+                    <div class="round-block-title">Round ${roundNum} <span class="highlight-map">(${mapName})</span></div>
                     ${entriesHTML}
                  </div>`;
                  
@@ -591,7 +584,7 @@ function handleElimination() {
         
         eliminatedCountries = losers.map(l => ({ code: l.code, name: l.name }));
         countries = countries.filter(c => survivors.some(s => s.code === c.code));
-        reasonText = `Finišs slēgts! TOP 30 tika tālāk.`;
+        reasonText = `Gate Closed! TOP 30 advanced.`;
     } 
     else if (currentEvent === "half") {
         let halfSize = Math.floor(countries.length / 2);
@@ -601,20 +594,20 @@ function handleElimination() {
 
         eliminatedCountries = losers.map(l => ({ code: l.code, name: l.name }));
         countries = countries.filter(c => survivors.some(s => s.code === c.code));
-        reasonText = `Grieziena beigas! Lēnākā puse uzsprāga.`;
+        reasonText = `Round Over! The slower half exploded.`;
     } 
     else if (currentEvent === "triple" && finishedMarbles.length >= 3) {
         let losers = finishedMarbles.slice(-3).reverse();
         eliminatedCountries = losers.map(l => ({ code: l.code, name: l.name }));
         let elimCodes = eliminatedCountries.map(e => e.code);
         countries = countries.filter(c => !elimCodes.includes(c.code));
-        reasonText = `Trīs pēdējās vietas pamet turnīru.`;
+        reasonText = `The last three places leave the tournament.`;
     } 
     else {
         let loser = finishedMarbles[finishedMarbles.length - 1];
         eliminatedCountries.push({ code: loser.code, name: loser.name });
         countries = countries.filter(c => c.code !== loser.code);
-        reasonText = `Pēdējā bumba tika eliminēta.`;
+        reasonText = `The last marble was eliminated.`;
     }
 
     writeEliminationBlock(roundCounter, currentLevelName, eliminatedCountries);
@@ -623,25 +616,25 @@ function handleElimination() {
     if (currentPrediction) {
         let isEliminated = eliminatedCountries.some(e => e.code === currentPrediction);
         if (isEliminated) {
-            predictionText = "<br><span class=\"highlight-lose\">🛑 Tava izvēlētā valsts nupat izkrita!</span>";
+            predictionText = "<br><span class=\"highlight-lose\">🛑 Your chosen country just got eliminated!</span>";
         } else if (finishedMarbles[0] && finishedMarbles[0].code === currentPrediction) {
-            predictionText = "<br><span class=\"highlight-win\">⭐ Izcili! Tava valsts uzvarēja raundu!</span>";
+            predictionText = "<br><span class=\"highlight-win\">⭐ Amazing! Your country won the round!</span>";
         } else {
-            predictionText = "<br><span class=\"highlight-win\">🔹 Tava valsts kvalificējās.</span>";
+            predictionText = "<br><span class=\"highlight-win\">🔹 Your country qualified.</span>";
         }
     }
 
     if (countries.length > 1) {
-        roundStatusLog.innerHTML = `${reasonText}${predictionText}<br><br><b>Palikušas valstis: ${countries.length}</b>`;
+        roundStatusLog.innerHTML = `${reasonText}${predictionText}<br><br><b>Remaining countries: ${countries.length}</b>`;
         updatePredictSelect();
         rollNextEvent();
     } else {
         let finalWinner = countries[0];
-        eventDisplay.innerText = "TURNĪRS BEIDZIES!";
+        eventDisplay.innerText = "TOURNAMENT OVER!";
         if (currentPrediction === finalWinner.code) {
-            roundStatusLog.innerHTML = `👑 <b>ČEMPIONS: ${finalWinner.name}!</b><br>Tava prognoze bija uzvarošā! 🏆`;
+            roundStatusLog.innerHTML = `👑 <b>CHAMPION: ${finalWinner.name}!</b><br>Your prediction was correct! 🏆`;
         } else {
-            roundStatusLog.innerHTML = `👑 <b>ČEMPIONS: ${finalWinner.name}!</b>`;
+            roundStatusLog.innerHTML = `👑 <b>CHAMPION: ${finalWinner.name}!</b>`;
         }
     }
 }
