@@ -35,7 +35,6 @@
             text-align: center;
         }
 
-        /* Trīs kolonnu izkārtojums */
         .game-layout {
             display: flex;
             max-width: 1500px;
@@ -44,7 +43,6 @@
             align-items: flex-start;
         }
 
-        /* Kreisais vadības panelis */
         .left-panel {
             flex: 1;
             min-width: 250px;
@@ -58,7 +56,6 @@
             gap: 15px;
         }
 
-        /* Centrālais spēles ekrāns */
         .center-panel {
             flex: 2;
             display: flex;
@@ -66,10 +63,9 @@
             align-items: center;
         }
 
-        /* Labais izslēgšanas žurnāls */
         .right-panel {
             flex: 1;
-            min-width: 300px;
+            min-width: 320px;
             background: var(--panel-bg);
             padding: 20px;
             border-radius: 16px;
@@ -164,7 +160,6 @@
             text-align: left;
         }
 
-        /* Izslēgto saraksta konteiners ar skritulīti */
         #eliminationHistory {
             font-size: 13px;
             line-height: 1.5;
@@ -177,14 +172,36 @@
             flex-grow: 1;
         }
 
-        .log-entry {
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+        .round-block {
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #ff5252;
         }
 
-        .highlight-win { color: var(--accent-green); font-weight: bold; }
-        .highlight-lose { color: #ff5252; font-weight: bold; }
-        .highlight-map { color: #e0e0e0; font-style: italic; }
+        .round-block-title {
+            font-weight: bold;
+            color: #fff;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .elim-index {
+            color: #ff9100;
+            font-weight: bold;
+            margin-right: 6px;
+        }
+
+        .highlight-lose { color: #ff5252; font-weight: 500; }
+        .highlight-map { color: #888; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -212,8 +229,8 @@
     </div>
 
     <div class="right-panel">
-        <div class="panel-title">Izslēgšanas Žurnāls</div>
-        <div id="eliminationHistory">Saraksts ir tukšs. Neviena valsts vēl nav pametusi spēli.</div>
+        <div class="panel-title">Izslēgšanas Secība</div>
+        <div id="eliminationHistory">Saraksts ir tukšs.</div>
     </div>
 </div>
 
@@ -233,9 +250,9 @@ let currentPrediction = "";
 let currentLevelName = "";
 let roundCounter = 0;
 let particles = [];
-let eliminationLogData = []; // Saglabā izslēgto vēsturi
+let roundBlocksHTML = []; // Glabā HTML blokus katram raundam
 
-// VISAS 195 PASAULES VALSTIS
+// PASAULES VALSTIS
 let countries = [
     { code: "af", name: "Afganistāna" }, { code: "al", name: "Albānija" }, { code: "dz", name: "Alžīrija" }, { code: "ad", name: "Andora" }, { code: "ao", name: "Angola" },
     { code: "ag", name: "Antigva un Barbuda" }, { code: "ar", name: "Argentīna" }, { code: "am", name: "Armēnija" }, { code: "au", name: "Austrālija" }, { code: "at", name: "Austrija" },
@@ -509,12 +526,21 @@ function update() {
     requestAnimationFrame(update);
 }
 
-function logElimination(countryName, levelName, round) {
-    eliminationLogData.unshift({ name: countryName, map: levelName, round: round });
-    
-    eliminationHistory.innerHTML = eliminationLogData.map(entry => {
-        return `<div class="log-entry"><b>R${entry.round}</b> - <span class="highlight-lose">${entry.name}</span> pameta spēli kartē <span class="highlight-map">${entry.map}</span></div>`;
+// Funkcija, kas saņem precīzi sakārtotu sarakstu un izvada ekrānā secību (1., 2., 3...)
+function writeEliminationBlock(roundNum, mapName, orderedLosers) {
+    let entriesHTML = orderedLosers.map((c, index) => {
+        return `<div class="log-entry">
+                    <span><span class="elim-index">#${index + 1}</span><span class="highlight-lose">${c.name}</span></span>
+                </div>`;
     }).join('');
+
+    let block = `<div class="round-block">
+                    <div class="round-block-title">Raunds ${roundNum} <span class="highlight-map">(${mapName})</span></div>
+                    ${entriesHTML}
+                 </div>`;
+                 
+    roundBlocksHTML.unshift(block); // Jaunākos raundus liekam augšā
+    eliminationHistory.innerHTML = roundBlocksHTML.join('');
 }
 
 function handleElimination() {
@@ -523,34 +549,41 @@ function handleElimination() {
 
     if (currentEvent === "top30" && finishedMarbles.length >= 30) {
         let survivors = finishedMarbles.slice(0, 30);
-        eliminatedCountries = countries.filter(c => !survivors.some(s => s.code === c.code));
+        // Atlasām tos, kas uzsprāga, un sakārtojam pēc Y pozīcijas (vislēnākie / zemākie augšgalā kā pirmie kritušie)
+        let losers = marbles.filter(m => !survivors.some(s => s.code === m.code));
+        losers.sort((a, b) => a.y - b.y); 
+        
+        eliminatedCountries = losers.map(l => ({ code: l.code, name: l.name }));
         countries = countries.filter(c => survivors.some(s => s.code === c.code));
-        reasonText = `Finišs slēgts! TOP 30 tiek tālāk.`;
+        reasonText = `Finišs slēgts! TOP 30 tika tālāk.`;
     } 
     else if (currentEvent === "half") {
         let halfSize = Math.floor(countries.length / 2);
         let survivors = finishedMarbles.slice(0, halfSize);
-        eliminatedCountries = countries.filter(c => !survivors.some(s => s.code === c.code));
+        let losers = marbles.filter(m => !survivors.some(s => s.code === m.code));
+        losers.sort((a, b) => a.y - b.y);
+
+        eliminatedCountries = losers.map(l => ({ code: l.code, name: l.name }));
         countries = countries.filter(c => survivors.some(s => s.code === c.code));
-        reasonText = `Grieziena beigas! 50% lēnāko valstu izslēgtas.`;
+        reasonText = `Grieziena beigas! Lēnākā puse uzsprāga.`;
     } 
     else if (currentEvent === "triple" && finishedMarbles.length >= 3) {
-        eliminatedCountries = finishedMarbles.slice(-3).map(e => ({code: e.code, name: e.name}));
+        // Trīs pēdējie finišētāji. Sakārtojam tā, ka pēdējā vieta ir pirmais sarakstā
+        let losers = finishedMarbles.slice(-3).reverse();
+        eliminatedCountries = losers.map(l => ({ code: l.code, name: l.name }));
         let elimCodes = eliminatedCountries.map(e => e.code);
         countries = countries.filter(c => !elimCodes.includes(c.code));
         reasonText = `Trīs pēdējās vietas pamet turnīru.`;
     } 
     else {
         let loser = finishedMarbles[finishedMarbles.length - 1];
-        eliminatedCountries.push({code: loser.code, name: loser.name});
+        eliminatedCountries.push({ code: loser.code, name: loser.name });
         countries = countries.filter(c => c.code !== loser.code);
         reasonText = `Pēdējā bumba tika eliminēta.`;
     }
 
-    // Pievienojam visas nule izslēgtās valstis labās malas žurnālā
-    eliminatedCountries.forEach(ec => {
-        logElimination(ec.name, currentLevelName, roundCounter);
-    });
+    // Izsaucam žurnāla ierakstīšanu ar precīzo secību šim raundam
+    writeEliminationBlock(roundCounter, currentLevelName, eliminatedCountries);
 
     let predictionText = "";
     if (currentPrediction) {
