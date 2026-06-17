@@ -2,7 +2,7 @@
 <html lang="lv">
 <head>
     <meta charset="UTF-8">
-    <title>Countryball Marble Race</title>
+    <title>Countryball Marble Race - Random Levels</title>
     <style>
         body {
             background-color: #222;
@@ -35,6 +35,7 @@
         #leaderboard {
             margin-top: 15px;
             font-size: 18px;
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -56,7 +57,6 @@ const leaderboard = document.getElementById('leaderboard');
 const gravity = 0.15;
 const bounce = 0.5;
 
-// Sākotnējais valstu saraksts ar krāsām (var aizvietot ar attēliem vēlāk)
 let countries = [
     { name: "Latvija", color: "#9e3039", text: "🇱🇻" },
     { name: "Lietuva", color: "#fdb913", text: "🇱🇹" },
@@ -69,31 +69,66 @@ let marbles = [];
 let finishedMarbles = [];
 let obstacles = [];
 let raceRunning = false;
+let currentLevelName = "";
 
-// Izveido šķēršļus (trijstūri / tapas un līnijas)
-function createMap() {
-    obstacles = [];
-    // Rindu izkārtojums tapām (Pegs) kā īstā "Plinko" vai bumbiņu trasē
+// 1. LĪMENIS: Klasiskais Plinko (Tapas)
+function generateClassicLevel() {
+    currentLevelName = "Klasiskās tapas";
     for (let row = 0; row < 5; row++) {
         let cols = row % 2 === 0 ? 6 : 5;
         let xOffset = row % 2 === 0 ? 40 : 75;
         for (let col = 0; col < cols; col++) {
-            obstacles.push({
-                x: xOffset + col * 80,
-                y: 150 + row * 70,
-                radius: 8
-            });
+            obstacles.push({ x: xOffset + col * 80, y: 150 + row * 70, radius: 8 });
         }
     }
 }
 
-// Inicializē bumbiņas
+// 2. LĪMENIS: Zig-Zag lielie šķēršļi
+function generateZigZagLevel() {
+    currentLevelName = "Zig-Zag labirints";
+    obstacles.push({ x: 100, y: 160, radius: 45 });
+    obstacles.push({ x: 400, y: 250, radius: 45 });
+    obstacles.push({ x: 120, y: 350, radius: 45 });
+    obstacles.push({ x: 380, y: 450, radius: 45 });
+    
+    // Sīki punkti papildu haosam vidū
+    obstacles.push({ x: 250, y: 200, radius: 8 });
+    obstacles.push({ x: 250, y: 400, radius: 8 });
+}
+
+// 3. LĪMENIS: Centrālais dimants / Sadalītājs
+function generateDiamondLevel() {
+    currentLevelName = "Centrālais dimants";
+    obstacles.push({ x: 250, y: 160, radius: 30 });
+    obstacles.push({ x: 140, y: 260, radius: 25 });
+    obstacles.push({ x: 360, y: 260, radius: 25 });
+    obstacles.push({ x: 250, y: 360, radius: 35 });
+    
+    // Malu atsitēji
+    obstacles.push({ x: 30, y: 310, radius: 15 });
+    obstacles.push({ x: 470, y: 310, radius: 15 });
+}
+
+// Izvēlas nejaušu karti
+function createRandomMap() {
+    obstacles = []; 
+    const randomChoice = Math.floor(Math.random() * 3);
+    
+    if (randomChoice === 0) {
+        generateClassicLevel();
+    } else if (randomChoice === 1) {
+        generateZigZagLevel();
+    } else {
+        generateDiamondLevel();
+    }
+}
+
 function setupMarbles() {
     marbles = countries.map((country, index) => ({
         ...country,
-        x: 200 + (index * 25) + Math.random() * 10,
+        x: 180 + (index * 30) + (Math.random() - 0.5) * 15,
         y: 50,
-        vx: (Math.random() - 0.5) * 2,
+        vx: (Math.random() - 0.5) * 3,
         vy: 0,
         radius: 16,
         isFinished: false
@@ -104,13 +139,13 @@ function setupMarbles() {
 function startRace() {
     if (raceRunning) return;
     if (countries.length <= 1) {
-        leaderboard.innerHTML = `Spēle beigusies! Uzvarētājs ir 👑 ${countries[0].name}!`;
+        leaderboard.innerHTML = `Spēle beigusies! Uzvarētājs ir 👑 <b>${countries[0].name}</b>!`;
         return;
     }
+    createRandomMap(); 
     setupMarbles();
-    createMap();
     raceRunning = true;
-    leaderboard.innerHTML = "Sacīkstes norit...";
+    leaderboard.innerHTML = `Pašreizējā trase: <b>${currentLevelName}</b><br>Sacīkstes norit...`;
     update();
 }
 
@@ -119,7 +154,12 @@ function update() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Zīmē finiša līniju
+    // Fona teksts ar līmeņa nosaukumu
+    ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.font = "bold 26px Arial";
+    ctx.fillText(currentLevelName.toUpperCase(), 30, 90);
+
+    // Finiša līnija
     ctx.fillStyle = "#555";
     ctx.fillRect(0, canvas.height - 80, canvas.width, 10);
     ctx.fillStyle = "#fff";
@@ -135,45 +175,39 @@ function update() {
         ctx.closePath();
     });
 
-    // Kustina un zīmē bumbiņas (Countryballs)
+    // Kustība un fizika
     marbles.forEach(m => {
         if (m.isFinished) return;
 
-        // Fizikas kalkulācija
         m.vy += gravity;
         m.x += m.vx;
         m.y += m.vy;
 
-        // Sadursme ar sienām
         if (m.x - m.radius < 0) { m.x = m.radius; m.vx *= -bounce; }
         if (m.x + m.radius > canvas.width) { m.x = canvas.width - m.radius; m.vx *= -bounce; }
 
-        // Sadursme ar šķēršļiem
         obstacles.forEach(obs => {
             let dx = m.x - obs.x;
             let dy = m.y - obs.y;
             let distance = Math.sqrt(dx * dx + dy * dy);
 
             if (distance < m.radius + obs.radius) {
-                // Atlekšanas leņķis
                 let angle = Math.atan2(dy, dx);
                 m.x = obs.x + (m.radius + obs.radius) * Math.cos(angle);
                 m.y = obs.y + (m.radius + obs.radius) * Math.sin(angle);
                 
-                // Maina ātrumu pēc sadursmes + pieliek mazuliet nejaušības efektu
                 let speed = Math.sqrt(m.vx * m.vx + m.vy * m.vy) * bounce;
-                m.vx = Math.cos(angle) * speed + (Math.random() - 0.5);
+                m.vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 2;
                 m.vy = Math.sin(angle) * speed;
             }
         });
 
-        // Finiša sasniegšana
         if (m.y >= canvas.height - 80) {
             m.isFinished = true;
             finishedMarbles.push(m);
         }
 
-        // Zīmē Countryball bumbu
+        // Vizuālais bumbiņas zīmējums
         ctx.beginPath();
         ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
         ctx.fillStyle = m.color;
@@ -183,13 +217,11 @@ function update() {
         ctx.stroke();
         ctx.closePath();
 
-        // Iezīmē emodži kā karogu
         ctx.fillStyle = "white";
         ctx.font = "16px Arial";
         ctx.fillText(m.text, m.x - 10, m.y + 6);
     });
 
-    // Pārbauda vai visas (vai gandrīz visas) ir finišējušas
     if (finishedMarbles.length === countries.length) {
         raceRunning = false;
         handleElimination();
@@ -200,16 +232,13 @@ function update() {
 }
 
 function handleElimination() {
-    // Pēdējā bumbiņa sarakstā ir tā, kas finišēja pēdējā
     let loser = finishedMarbles[finishedMarbles.length - 1];
-    
-    // Izmet zaudētāju no galvenā valstu saraksta nākajai kārtai
     countries = countries.filter(c => c.name !== loser.name);
 
     if (countries.length > 1) {
-        leaderboard.innerHTML = `❌ <b>${loser.name}</b> palika pēdējā un tiek eliminēta!<br>Palikušas ${countries.length} valstis. Spied pogu vēlreiz!`;
+        leaderboard.innerHTML = `❌ <b>${loser.name}</b> palika pēdējā trasē "<i>${currentLevelName}</i>" un tiek eliminēta!<br>Palikušas ${countries.length} valstis. Gatavojies nākamajai trasei!`;
     } else {
-        leaderboard.innerHTML = `🎉 Spēle beigusies! Zaudēja ${loser.name}. <br>👑 <b>UZVARĒTĀJS IR ${countries[0].name}!</b>`;
+        leaderboard.innerHTML = `🎉 Spēle beigusies! Trasē "<i>${currentLevelName}</i>" izkrita ${loser.name}.<br>👑 <b>UZVARĒTĀJS IR ${countries[0].name}!</b>`;
     }
 }
 </script>
