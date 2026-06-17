@@ -2,7 +2,7 @@
 <html lang="lv">
 <head>
     <meta charset="UTF-8">
-    <title>Mega Countryball Marble Race</title>
+    <title>Pasaules Countryball Marble Race</title>
     <style>
         body {
             background-color: #222;
@@ -47,13 +47,13 @@
 </head>
 <body>
 
-    <h1>Mega Countryball Eliminācija</h1>
-    <canvas id="raceCanvas" width="600" height="650"></canvas>
+    <h1>Pasaules Countryball Eliminācija</h1>
+    <canvas id="raceCanvas" width="700" height="700"></canvas>
     
     <div id="ui">
-        <button onclick="startRace()">Sākt raundu</button>
+        <button onclick="startRace()">Sākt nākamo raundu</button>
         <button class="shake-btn" onclick="shakeMarbles()">Pakratīt bumbas (Antistuck)</button>
-        <div id="leaderboard">Gatavs startam! Kopā ir 17 valstis.</div>
+        <div id="leaderboard">Ielādē valstis...</div>
     </div>
 
 <script>
@@ -61,27 +61,35 @@ const canvas = document.getElementById('raceCanvas');
 const ctx = canvas.getContext('2d');
 const leaderboard = document.getElementById('leaderboard');
 
-const gravity = 0.16;
+const gravity = 0.15;
 const bounce = 0.45;
 
+// MILZĪGS VALSTU SARAKSTS (Vari droši papildināt pēc šī paša šablona līdz pat visām 195)
 let countries = [
-    { id: "LV", name: "Latvija" },
-    { id: "LT", name: "Lietuva" },
-    { id: "EE", name: "Igaunija" },
-    { id: "FI", name: "Somija" },
-    { id: "DE", name: "Vācija" },
-    { id: "FR", name: "Francija" },
-    { id: "IT", name: "Itālija" },
-    { id: "ES", name: "Spānija" },
-    { id: "UA", name: "Ukraina" },
-    { id: "PL", name: "Polija" },
-    { id: "GB", name: "Apvienotā Karaliste" },
-    { id: "SE", name: "Zviedrija" },
-    { id: "US", name: "ASV" },
-    { id: "CN", name: "Ķīna" },
-    { id: "JP", name: "Japāna" },
-    { id: "IN", name: "Indija" },
-    { id: "BR", name: "Brazīlija" }
+    // Eiropa
+    { code: "lv", name: "Latvija" }, { code: "lt", name: "Lietuva" }, { code: "ee", name: "Igaunija" },
+    { code: "fi", name: "Somija" }, { code: "de", name: "Vācija" }, { code: "fr", name: "Francija" },
+    { code: "it", name: "Itālija" }, { code: "es", name: "Spānija" }, { code: "ua", name: "Ukraina" },
+    { code: "pl", name: "Polija" }, { code: "gb", name: "Apvienotā Karaliste" }, { code: "se", name: "Zviedrija" },
+    { code: "no", name: "Norvēģija" }, { code: "dk", name: "Dānija" }, { code: "nl", name: "Nīderlande" },
+    { code: "be", name: "Beļģija" }, { code: "ch", name: "Šveice" }, { code: "at", name: "Austrija" },
+    { code: "ie", name: "Īrija" }, { code: "pt", name: "Portugāle" }, { code: "gr", name: "Grieķija" },
+    { code: "cz", name: "Čehija" }, { code: "hu", name: "Ungārija" }, { code: "ro", name: "Rumānija" },
+    { code: "hr", name: "Horvātija" }, { code: "is", name: "Islande" },
+    // Amerika
+    { code: "us", name: "ASV" }, { code: "ca", name: "Kanāda" }, { code: "mx", name: "Meksika" },
+    { code: "br", name: "Brazīlija" }, { code: "ar", name: "Argentīna" }, { code: "co", name: "Kolumbija" },
+    { code: "cl", name: "Čīle" }, { code: "pe", name: "Peru" }, { code: "ve", name: "Venesuela" },
+    // Āzija & Okeānija
+    { code: "cn", name: "Ķīna" }, { code: "jp", name: "Japāna" }, { code: "in", name: "Indija" },
+    { code: "kr", name: "Dienvidkoreja" }, { code: "au", name: "Austrālija" }, { code: "nz", name: "Jaunzēlande" },
+    { code: "id", name: "Indonēzija" }, { code: "th", name: "Taizeme" }, { code: "pk", name: "Pakistāna" },
+    { code: "sa", name: "Saūda Arābija" }, { code: "tr", name: "Turcija" }, { code: "il", name: "Izraēla" },
+    { code: "sg", name: "Singapūra" }, { code: "ph", name: "Filipīnas" }, { code: "vn", name: "Vjetnama" },
+    // Āfrika
+    { code: "za", name: "Dienvidāfrika" }, { code: "eg", name: "Ēģipte" }, { code: "ng", name: "Nigērija" },
+    { code: "ma", name: "Maroka" }, { code: "ke", name: "Kenija" }, { code: "gh", name: "Gana" },
+    { code: "dz", name: "Alžīrija" }, { code: "tn", name: "Tunisija" }, { code: "et", name: "Etiopija" }
 ];
 
 let marbles = [];
@@ -89,185 +97,122 @@ let finishedMarbles = [];
 let obstacles = [];
 let raceRunning = false;
 let currentLevelName = "";
+let flagImages = {}; // Šeit saglabāsim ielādētos attēlus
 
-function drawCountryball(ctx, x, y, radius, id) {
+// Karogu attēlu priekš-ielāde no interneta datubāzes
+function preloadFlags(callback) {
+    let loaded = 0;
+    let total = countries.length;
+    
+    countries.forEach(c => {
+        let img = new Image();
+        // Izmantojam publisku FlagCDN servisu
+        img.src = `https://flagcdn.com/w80/${c.code}.png`;
+        img.onload = () => {
+            flagImages[c.code] = img;
+            loaded++;
+            if (loaded === total) callback();
+        };
+        img.onerror = () => {
+            // Ja kāds karogs neielādējas, izveidojam tukšu bildi, lai spēle neuzkartos
+            flagImages[c.code] = new Image();
+            loaded++;
+            if (loaded === total) callback();
+        };
+    });
+}
+
+// Izsauc karogu ielādi uzreiz, kad atver lapu
+preloadFlags(() => {
+    leaderboard.innerHTML = `Visi karogi ielādēti! Kopā trasē gatavas doties <b>${countries.length}</b> pasaules valstis.`;
+});
+
+function drawCountryball(ctx, x, y, radius, code) {
     ctx.save();
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.clip();
 
-    let w = radius * 2;
-    let h = (radius * 2) / 3;
-
-    if (id === "LV") {
-        ctx.fillStyle = "#9e3039"; ctx.fillRect(x - radius, y - radius, w, radius * 2);
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x - radius, y - radius / 4, w, radius / 2);
-    } 
-    else if (id === "LT") {
-        ctx.fillStyle = "#fdb913"; ctx.fillRect(x - radius, y - radius, w, h);
-        ctx.fillStyle = "#006a44"; ctx.fillRect(x - radius, y - radius + h, w, h);
-        ctx.fillStyle = "#c1272d"; ctx.fillRect(x - radius, y - radius + h * 2, w, h);
-    } 
-    else if (id === "EE") {
-        ctx.fillStyle = "#4891d9"; ctx.fillRect(x - radius, y - radius, w, h);
-        ctx.fillStyle = "#000000"; ctx.fillRect(x - radius, y - radius + h, w, h);
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x - radius, y - radius + h * 2, w, h);
-    } 
-    else if (id === "FI") {
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x - radius, y - radius, w, radius * 2);
-        ctx.fillStyle = "#003580";
-        ctx.fillRect(x - radius / 3, y - radius, radius * 0.6, radius * 2);
-        ctx.fillRect(x - radius, y - radius / 3, w, radius * 0.6);
-    } 
-    else if (id === "DE") {
-        ctx.fillStyle = "#000000"; ctx.fillRect(x - radius, y - radius, w, h);
-        ctx.fillStyle = "#dd0000"; ctx.fillRect(x - radius, y - radius + h, w, h);
-        ctx.fillStyle = "#ffce00"; ctx.fillRect(x - radius, y - radius + h * 2, w, h);
-    }
-    else if (id === "FR") {
-        let w3 = (radius * 2) / 3;
-        ctx.fillStyle = "#002395"; ctx.fillRect(x - radius, y - radius, w3, radius * 2);
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x - radius + w3, y - radius, w3, radius * 2);
-        ctx.fillStyle = "#ed2939"; ctx.fillRect(x - radius + w3 * 2, y - radius, w3, radius * 2);
-    }
-    else if (id === "IT") {
-        let w3 = (radius * 2) / 3;
-        ctx.fillStyle = "#009246"; ctx.fillRect(x - radius, y - radius, w3, radius * 2);
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x - radius + w3, y - radius, w3, radius * 2);
-        ctx.fillStyle = "#ce2b37"; ctx.fillRect(x - radius + w3 * 2, y - radius, w3, radius * 2);
-    }
-    else if (id === "UA") {
-        ctx.fillStyle = "#0057b7"; ctx.fillRect(x - radius, y - radius, w, radius);
-        ctx.fillStyle = "#ffd700"; ctx.fillRect(x - radius, y, w, radius);
-    }
-    else if (id === "PL") {
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x - radius, y - radius, w, radius);
-        ctx.fillStyle = "#dc143c"; ctx.fillRect(x - radius, y, w, radius);
-    }
-    else if (id === "SE") {
-        ctx.fillStyle = "#006aa7"; ctx.fillRect(x - radius, y - radius, w, radius * 2);
-        ctx.fillStyle = "#fecc00";
-        ctx.fillRect(x - radius / 3, y - radius, radius * 0.5, radius * 2);
-        ctx.fillRect(x - radius, y - radius / 3, w, radius * 0.5);
-    }
-    else if (id === "JP") {
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x - radius, y - radius, w, radius * 2);
-        ctx.fillStyle = "#bc002d"; ctx.beginPath(); ctx.arc(x, y, radius * 0.5, 0, Math.PI * 2); ctx.fill();
-    }
-    else if (id === "CN") {
-        ctx.fillStyle = "#de2910"; ctx.fillRect(x - radius, y - radius, w, radius * 2);
-        ctx.fillStyle = "#ffde00"; ctx.beginPath(); ctx.arc(x - 7, y - 6, 4, 0, Math.PI * 2); ctx.fill();
-    }
-    else if (id === "US") {
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x - radius, y - radius, w, radius * 2);
-        ctx.fillStyle = "#b22234";
-        for(let i=0; i<7; i++) { ctx.fillRect(x - radius, y - radius + (i * 5), w, 2.5); }
-        ctx.fillStyle = "#3c3b6e"; ctx.fillRect(x - radius, y - radius, radius, radius);
-    }
-    else if (id === "IN") {
-        ctx.fillStyle = "#ff9933"; ctx.fillRect(x - radius, y - radius, w, h);
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x - radius, y - radius + h, w, h);
-        ctx.fillStyle = "#138808"; ctx.fillRect(x - radius, y - radius + h * 2, w, h);
-        ctx.fillStyle = "#000080"; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.stroke();
-    }
-    else if (id === "ES") {
-        ctx.fillStyle = "#aa151b"; ctx.fillRect(x - radius, y - radius, w, radius * 2);
-        ctx.fillStyle = "#f1bf00"; ctx.fillRect(x - radius, y - radius + radius * 0.5, w, radius);
-    }
-    else if (id === "GB") {
-        ctx.fillStyle = "#012169"; ctx.fillRect(x - radius, y - radius, w, radius * 2);
-        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x-radius, y-radius); ctx.lineTo(x+radius, y+radius); ctx.moveTo(x+radius, y-radius); ctx.lineTo(x-radius, y+radius); ctx.stroke();
-        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(x, y-radius); ctx.lineTo(x, y+radius); ctx.moveTo(x-radius, y); ctx.lineTo(x+radius, y); ctx.stroke();
-        ctx.strokeStyle = "#da291c"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x, y-radius); ctx.lineTo(x, y+radius); ctx.moveTo(x-radius, y); ctx.lineTo(x+radius, y); ctx.stroke();
-    }
-    else if (id === "BR") {
-        ctx.fillStyle = "#009c3b"; ctx.fillRect(x - radius, y - radius, w, radius * 2);
-        ctx.fillStyle = "#ffdf00"; ctx.beginPath(); ctx.moveTo(x, y - radius + 4); ctx.lineTo(x + radius - 4, y); ctx.lineTo(x, y + radius - 4); ctx.lineTo(x - radius + 4, y); ctx.fill();
-        ctx.fillStyle = "#002147"; ctx.beginPath(); ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2); ctx.fill();
+    // Uzzīmē ielādēto karoga attēlu bumbiņas iekšā
+    let img = flagImages[code];
+    if (img && img.complete) {
+        // Centrējam un mērogojam bildi bumbiņas rādiusā
+        ctx.drawImage(img, x - radius, y - radius, radius * 2, radius * 2);
+    } else {
+        ctx.fillStyle = "#777";
+        ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
     }
 
     ctx.restore();
 
+    // Bumbiņas kontūra
     ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.lineWidth = 2.5; ctx.strokeStyle = "#000"; ctx.stroke();
+    
+    // Countryball acis
     ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x - 5, y - 3, 4, 0, Math.PI * 2); ctx.arc(x + 5, y - 3, 4, 0, Math.PI * 2); ctx.fill();
     ctx.lineWidth = 1; ctx.strokeStyle = "#000"; ctx.stroke();
 }
 
-// 4 DAŽĀDI LĪMEŅI (Ar nedaudz platākām spraugām, lai bumbas neiesprūst)
+// Trases dizaini (Optimizēti lielākam Canvas izmēram 700x700)
 function generateClassicLevel() {
-    currentLevelName = "Klasiskās tapas";
-    for (let row = 0; row < 6; row++) {
-        let cols = row % 2 === 0 ? 6 : 5;
-        let xOffset = row % 2 === 0 ? 65 : 110;
+    currentLevelName = "Pasaules tapu labirints";
+    for (let row = 0; row < 7; row++) {
+        let cols = row % 2 === 0 ? 7 : 6;
+        let xOffset = row % 2 === 0 ? 80 : 130;
         for (let col = 0; col < cols; col++) {
-            obstacles.push({ x: xOffset + col * 90, y: 160 + row * 65, radius: 8 });
+            obstacles.push({ x: xOffset + col * 90, y: 180 + row * 65, radius: 8 });
         }
     }
 }
 
 function generateZigZagLevel() {
-    currentLevelName = "Zig-Zag labirints";
-    obstacles.push({ x: 110, y: 170, radius: 55 });
-    obstacles.push({ x: 490, y: 270, radius: 55 });
-    obstacles.push({ x: 110, y: 390, radius: 55 });
-    obstacles.push({ x: 490, y: 490, radius: 55 });
-    
-    for (let i = 0; i < 4; i++) {
-        obstacles.push({ x: 300, y: 200 + i * 100, radius: 8 });
-    }
+    currentLevelName = "Mega Zig-Zag";
+    obstacles.push({ x: 130, y: 180, radius: 65 });
+    obstacles.push({ x: 570, y: 290, radius: 65 });
+    obstacles.push({ x: 150, y: 420, radius: 65 });
+    obstacles.push({ x: 550, y: 530, radius: 65 });
+    for (let i = 0; i < 5; i++) obstacles.push({ x: 350, y: 200 + i * 90, radius: 8 });
 }
 
 function generateDiamondLevel() {
-    currentLevelName = "Dubultais Dimants";
-    obstacles.push({ x: 300, y: 160, radius: 40 });
-    obstacles.push({ x: 160, y: 290, radius: 30 });
-    obstacles.push({ x: 440, y: 290, radius: 30 });
-    obstacles.push({ x: 300, y: 420, radius: 40 });
-    
-    obstacles.push({ x: 40, y: 340, radius: 15 });
-    obstacles.push({ x: 560, y: 340, radius: 15 });
-}
-
-function generateChaosLevel() {
-    currentLevelName = "Lielais Haoss";
-    let positions = [
-        {x: 110, y: 180, r: 25}, {x: 260, y: 230, r: 15}, {x: 420, y: 170, r: 35}, {x: 530, y: 250, r: 20},
-        {x: 180, y: 350, r: 40}, {x: 350, y: 330, r: 20}, {x: 490, y: 390, r: 30},
-        {x: 110, y: 490, r: 15}, {x: 290, y: 470, r: 35}, {x: 430, y: 490, r: 15}
-    ];
-    positions.forEach(pos => obstacles.push({ x: pos.x, y: pos.y, radius: pos.r }));
+    currentLevelName = "Pasaules Dimanti";
+    obstacles.push({ x: 350, y: 180, radius: 45 });
+    obstacles.push({ x: 200, y: 320, radius: 35 });
+    obstacles.push({ x: 500, y: 320, radius: 35 });
+    obstacles.push({ x: 350, y: 460, radius: 45 });
+    obstacles.push({ x: 50, y: 370, radius: 20 });
+    obstacles.push({ x: 650, y: 370, radius: 20 });
 }
 
 function createRandomMap() {
     obstacles = []; 
-    const randomChoice = Math.floor(Math.random() * 4);
+    const randomChoice = Math.floor(Math.random() * 3);
     if (randomChoice === 0) generateClassicLevel();
     else if (randomChoice === 1) generateZigZagLevel();
-    else if (randomChoice === 2) generateDiamondLevel();
-    else generateChaosLevel();
+    else generateDiamondLevel();
 }
 
 function setupMarbles() {
     marbles = countries.map((country, index) => ({
         ...country,
-        x: 120 + ((index % 9) * 45) + (Math.random() - 0.5) * 10,
-        y: 35 + Math.floor(index / 9) * 40,
+        // Tā kā bumbu ir daudz, tās izvietojas vairākās rindās pa 12 bumbām rindā
+        x: 100 + ((index % 12) * 45) + (Math.random() - 0.5) * 10,
+        y: 35 + Math.floor(index / 12) * 38,
         vx: (Math.random() - 0.5) * 3,
         vy: 0,
-        radius: 16, 
+        radius: 15, // Nedaudz mazākas, lai satilptu visas pasaules valstis
         isFinished: false,
-        stuckFrames: 0 // Skaitītājs, cik ilgi bumba stāv uz vietas
+        stuckFrames: 0
     }));
     finishedMarbles = [];
 }
 
-// Funkcija bumbiņu pakratīšanai (Ja spēlētājs nospiež oranžo pogu)
 function shakeMarbles() {
     if (!raceRunning) return;
     marbles.forEach(m => {
         if (!m.isFinished) {
-            m.vx += (Math.random() - 0.5) * 5;
-            m.vy -= Math.random() * 4 + 2; // Palēcina uz augšu
+            m.vx += (Math.random() - 0.5) * 6;
+            m.vy -= Math.random() * 4 + 2;
         }
     });
 }
@@ -275,7 +220,7 @@ function shakeMarbles() {
 function startRace() {
     if (raceRunning) return;
     if (countries.length <= 1) {
-        leaderboard.innerHTML = `Spēle beigusies! Absolūtais uzvarētājs ir 👑 <b>${countries[0].name}</b>!`;
+        leaderboard.innerHTML = `Turnīrs noslēdzies! Pasaules valdnieks ir 👑 <b>${countries[0].name}</b>!`;
         return;
     }
     createRandomMap(); 
@@ -290,16 +235,19 @@ function update() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Fona teksts
     ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
     ctx.font = "bold 32px Arial";
-    ctx.fillText(currentLevelName.toUpperCase(), 40, 110);
+    ctx.fillText(currentLevelName.toUpperCase(), 40, 130);
 
+    // Finiša līnija
     ctx.fillStyle = "#555";
     ctx.fillRect(0, canvas.height - 80, canvas.width, 10);
     ctx.fillStyle = "#fff";
     ctx.font = "14px Arial";
     ctx.fillText("FINIŠA ZONA", canvas.width / 2 - 45, canvas.height - 50);
 
+    // Zīmē šķēršļus
     ctx.fillStyle = "#888";
     obstacles.forEach(obs => {
         ctx.beginPath(); ctx.arc(obs.x, obs.y, obs.radius, 0, Math.PI * 2); ctx.fill(); ctx.closePath();
@@ -310,24 +258,23 @@ function update() {
 
         m.vy += gravity; m.x += m.vx; m.y += m.vy;
 
-        // --- AUTOMĀTISKĀ ANTISTUCK SISTĒMA ---
-        // Ja bumbiņas ātrums ir ļoti mazs
+        // Antistuck sistēma
         if (Math.abs(m.vx) < 0.1 && Math.abs(m.vy) < 0.2) {
             m.stuckFrames++;
-            if (m.stuckFrames > 45) { // Ja bumba nekustas apmēram nepilnu sekundi
-                m.vx = (Math.random() - 0.5) * 4; // Pagrūžam uz sāniem
-                m.vy = -2; // Nedaudz palēcinām uz augšu
+            if (m.stuckFrames > 40) {
+                m.vx = (Math.random() - 0.5) * 5;
+                m.vy = -2.5;
                 m.stuckFrames = 0;
             }
         } else {
             m.stuckFrames = 0;
         }
 
-        // Malas
+        // Malu sadursmes
         if (m.x - m.radius < 0) { m.x = m.radius; m.vx *= -bounce; }
         if (m.x + m.radius > canvas.width) { m.x = canvas.width - m.radius; m.vx *= -bounce; }
 
-        // Šķēršļi
+        // Šķēršļu sadursmes
         obstacles.forEach(obs => {
             let dx = m.x - obs.x;
             let dy = m.y - obs.y;
@@ -349,7 +296,8 @@ function update() {
             finishedMarbles.push(m);
         }
 
-        drawCountryball(ctx, m.x, m.y, m.radius, m.id);
+        // Zīmēšana ar bildi
+        drawCountryball(ctx, m.x, m.y, m.radius, m.code);
     });
 
     if (finishedMarbles.length === countries.length) {
@@ -363,12 +311,12 @@ function update() {
 
 function handleElimination() {
     let loser = finishedMarbles[finishedMarbles.length - 1];
-    countries = countries.filter(c => c.id !== loser.id);
+    countries = countries.filter(c => c.code !== loser.code);
 
     if (countries.length > 1) {
-        leaderboard.innerHTML = `❌ <b>${loser.name}</b> finišēja pēdējā un izkrīt!<br>Palikušas ${countries.length} valstis. Spied pogu nākamajam raundam!`;
+        leaderboard.innerHTML = `❌ <b>${loser.name}</b> finišēja pēdējā un izkrīt!<br>Palikušas ${countries.length} pasaules valstis. Spied pogu nākamajam raundam!`;
     } else {
-        leaderboard.innerHTML = `🎉 TURNĪRS IR NOSLĒDZIES!<br>👑 <b>UZVARĒTĀJS IR ${countries[0].name}!</b>`;
+        leaderboard.innerHTML = `🎉 PASAULES TURNĪRS IR NOSLĒDZIES!<br>👑 <b>UZVARĒTĀJS IR ${countries[0].name}!</b>`;
     }
 }
 </script>
