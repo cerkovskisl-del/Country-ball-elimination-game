@@ -11,60 +11,100 @@
             --accent-orange: #ff9100;
             --accent-blue: #00b0ff;
             --text-main: #f5f5f7;
-            --border-glow: rgba(255, 255, 255, 0.05);
         }
 
         body {
             background: linear-gradient(135deg, #0f0f12 0%, #1a1a24 100%);
             color: var(--text-main);
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            text-align: center;
             margin: 0;
             padding: 20px;
             min-height: 100vh;
+            box-sizing: border-box;
         }
 
         h1 {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-bottom: 20px;
+            margin: 0 0 20px 0;
             background: linear-gradient(90deg, #00b0ff, #00e676);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(0, 176, 255, 0.2);
+            text-align: center;
         }
 
-        .container {
-            max-width: 900px;
+        /* Trīs kolonnu izkārtojums */
+        .game-layout {
+            display: flex;
+            max-width: 1500px;
             margin: 0 auto;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        /* Kreisais vadības panelis */
+        .left-panel {
+            flex: 1;
+            min-width: 250px;
             background: var(--panel-bg);
             padding: 20px;
             border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Centrālais spēles ekrāns */
+        .center-panel {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Labais izslēgšanas žurnāls */
+        .right-panel {
+            flex: 1;
+            min-width: 300px;
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 700px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--accent-blue);
+            margin-bottom: 5px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 5px;
+            text-align: left;
         }
 
         #predictionArea {
             background: rgba(255,255,255,0.03);
-            padding: 12px 20px;
+            padding: 12px;
             border-radius: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
             border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        label {
-            font-size: 15px;
-            font-weight: 600;
-            color: #aaa;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
         }
 
         select {
-            padding: 10px 16px;
+            padding: 10px;
             font-size: 15px;
             font-weight: 700;
             background: #26262b;
@@ -72,27 +112,19 @@
             border: 1px solid #3e3e46;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s ease;
             outline: none;
-        }
-
-        select:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 10px rgba(0, 176, 255, 0.4);
+            width: 100%;
         }
 
         #eventDisplay {
-            font-size: 19px;
+            font-size: 15px;
             font-weight: 700;
             color: #fff;
             background: linear-gradient(90deg, rgba(255,145,0,0.15) 0%, rgba(255,145,0,0.02) 100%);
             border-left: 4px solid var(--accent-orange);
-            padding: 12px 20px;
-            margin: 15px auto;
+            padding: 12px;
             border-radius: 4px 8px 8px 4px;
-            max-width: 800px;
             text-align: left;
-            box-sizing: border-box;
         }
 
         canvas {
@@ -100,83 +132,108 @@
             border: 1px solid #2d2d35;
             border-radius: 12px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-            display: block;
-            margin: 20px auto;
         }
 
         button {
-            padding: 14px 35px;
+            padding: 14px;
             font-size: 16px;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
             background: linear-gradient(135deg, #00e676 0%, #00b0ff 100%);
             color: #05190e;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             box-shadow: 0 4px 20px rgba(0, 230, 118, 0.3);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
         }
 
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 25px rgba(0, 230, 118, 0.5);
-            filter: brightness(1.1);
         }
 
-        button:active {
-            transform: translateY(1px);
-        }
-
-        #leaderboard {
-            font-size: 16px;
-            line-height: 1.6;
+        #roundStatusLog {
+            font-size: 14px;
             background: rgba(0,0,0,0.2);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.02);
             color: #ccc;
+            text-align: left;
+        }
+
+        /* Izslēgto saraksta konteiners ar skritulīti */
+        #eliminationHistory {
+            font-size: 13px;
+            line-height: 1.5;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 8px;
+            color: #aaa;
+            text-align: left;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
         }
 
         .highlight-win { color: var(--accent-green); font-weight: bold; }
         .highlight-lose { color: #ff5252; font-weight: bold; }
+        .highlight-map { color: #e0e0e0; font-style: italic; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Pasaules Eliminācijas Turnīrs</h1>
-    
-    <div id="predictionArea">
-        <label for="countryPredict">Tava prognoze uz čempionu:</label>
-        <select id="countryPredict"><option value="">Izvēlies valsti...</option></select>
+<h1>Pasaules Eliminācijas Turnīrs</h1>
+
+<div class="game-layout">
+    <div class="left-panel">
+        <div class="panel-title">Iestatījumi</div>
+        <div id="predictionArea">
+            <label for="countryPredict">Tava prognoze uz čempionu:</label>
+            <select id="countryPredict"><option value="">Izvēlies valsti...</option></select>
+        </div>
+
+        <div id="eventDisplay">Sistēma gatava. Gaidām startu...</div>
+        
+        <button onclick="startRace()">Sākt raundu</button>
+        
+        <div class="panel-title">Raunda Statuss</div>
+        <div id="roundStatusLog">Gatavs jaunam skrējienam.</div>
     </div>
 
-    <div id="eventDisplay">Sistēma gatava. Gaidām startu...</div>
+    <div class="center-panel">
+        <canvas id="raceCanvas" width="800" height="700"></canvas>
+    </div>
 
-    <canvas id="raceCanvas" width="800" height="700"></canvas>
-    
-    <div id="ui">
-        <button onclick="startRace()">Sākt raundu</button>
-        <div id="leaderboard">Notiek datu sinhronizācija...</div>
+    <div class="right-panel">
+        <div class="panel-title">Izslēgšanas Žurnāls</div>
+        <div id="eliminationHistory">Saraksts ir tukšs. Neviena valsts vēl nav pametusi spēli.</div>
     </div>
 </div>
 
 <script>
 const canvas = document.getElementById('raceCanvas');
 const ctx = canvas.getContext('2d');
-const leaderboard = document.getElementById('leaderboard');
+const roundStatusLog = document.getElementById('roundStatusLog');
+const eliminationHistory = document.getElementById('eliminationHistory');
 const eventDisplay = document.getElementById('eventDisplay');
 const countryPredictSelect = document.getElementById('countryPredict');
 
-const gravity = 0.14;
-const bounce = 0.45;
+const gravity = 0.15;
+const bounce = 0.4;
 
 let currentEvent = "normal";
 let currentPrediction = "";
 let currentLevelName = "";
+let roundCounter = 0;
+let particles = [];
+let eliminationLogData = []; // Saglabā izslēgto vēsturi
 
 // VISAS 195 PASAULES VALSTIS
 let countries = [
@@ -245,7 +302,7 @@ function preloadFlags(callback) {
 }
 
 preloadFlags(() => {
-    leaderboard.innerHTML = `Sistēma gatava darbam. Veic savu izvēli augšējā logā un sāc elimināciju.`;
+    roundStatusLog.innerHTML = `Sistēma pilnībā gatava raundam.`;
     updatePredictSelect();
     rollNextEvent();
 });
@@ -259,6 +316,16 @@ function drawCountryball(ctx, x, y, radius, code) {
     
     ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.lineWidth = 1.2; ctx.strokeStyle = "rgba(0,0,0,0.8)"; ctx.stroke();
     ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x - 3, y - 2, 2.2, 0, Math.PI * 2); ctx.arc(x + 3, y - 2, 2.2, 0, Math.PI * 2); ctx.fill();
+}
+
+function createExplosion(x, y) {
+    for (let i = 0; i < 15; i++) {
+        particles.push({
+            x: x, y: y,
+            vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6,
+            radius: Math.random() * 3 + 2, alpha: 1
+        });
+    }
 }
 
 function createRandomMap() {
@@ -322,15 +389,15 @@ function createRandomMap() {
 function rollNextEvent() {
     if (countries.length <= 1) return;
     let dice = Math.random();
-    if (countries.length > 60 && dice < 0.35) {
+    if (countries.length > 50 && dice < 0.35) {
         currentEvent = "top30";
-        eventDisplay.innerHTML = "🏆 REŽĪMS: Tikai <b>TOP 30</b> tiek uz nākamo posmu! Pārējās tiks eliminētas.";
+        eventDisplay.innerHTML = "🏆 REŽĪMS: Tikai <b>TOP 30</b> finišē! Pārējie uzsprāgst uzreiz!";
     } else if (countries.length > 25 && dice >= 0.35 && dice < 0.65) {
         currentEvent = "half";
-        eventDisplay.innerHTML = "🪓 REŽĪMS: Pusītes grieziens! <b>50% lēnāko</b> valstu izkrīt uzreiz.";
+        eventDisplay.innerHTML = "🪓 REŽĪMS: Pusītes slazds! Tiklīdz <b>50%</b> finišē, pārējie uzsprāgst!";
     } else if (countries.length > 5 && dice >= 0.65 && dice < 0.85) {
         currentEvent = "triple";
-        eventDisplay.innerHTML = "❌ REŽĪMS: Trīskāršais apdraudējums. <b>3 pēdējās bumbas</b> pamet spēli.";
+        eventDisplay.innerHTML = "❌ REŽĪMS: Trīskāršais apdraudējums. Pēdējās 3 bumbas pamet spēli.";
     } else {
         currentEvent = "normal";
         eventDisplay.innerHTML = "🛡️ REŽĪMS: Standarta izslēgšana. Tikai pati pēdējā valsts izkrīt.";
@@ -340,18 +407,20 @@ function rollNextEvent() {
 function startRace() {
     if (raceRunning) return;
     if (countries.length <= 1) {
-        leaderboard.innerHTML = `Čempionāts noslēdzies! Uzvaras laurus plūc 👑 <b>${countries[0].name}</b>!`;
+        roundStatusLog.innerHTML = `Čempionāts ir pabeigts!`;
         return;
     }
     
+    roundCounter++;
     currentPrediction = countryPredictSelect.value;
     createRandomMap();
+    particles = [];
     
     marbles = countries.map((country, index) => ({
         ...country,
         x: 60 + ((index % 22) * 32) + (Math.random() - 0.5) * 4,
-        y: 30 + Math.floor(index / 22) * 26,
-        vx: (Math.random() - 0.5) * 2, vy: 0, radius: 11, isFinished: false, stuckFrames: 0
+        y: 35 + Math.floor(index / 22) * 26,
+        vx: (Math.random() - 0.5) * 1.5, vy: 0, radius: 11, isFinished: false, stuckFrames: 0, exploded: false
     }));
     
     finishedMarbles = [];
@@ -360,37 +429,38 @@ function startRace() {
 }
 
 function update() {
-    if (!raceRunning) return;
+    if (!raceRunning && particles.length === 0) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Moderns kartes nosaukums
     ctx.fillStyle = "rgba(255, 255, 255, 0.02)";
     ctx.font = "bold 36px sans-serif";
     ctx.fillText(currentLevelName.toUpperCase(), 30, 150);
 
-    // Finiša līnija un zona
     ctx.fillStyle = "#2d2d38"; ctx.fillRect(0, canvas.height - 80, canvas.width, 10);
     ctx.fillStyle = "rgba(0, 230, 118, 0.03)"; ctx.fillRect(0, canvas.height - 70, canvas.width, 70);
-    ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.font = "12px sans-serif"; ctx.fillText("FINIŠA ZONA", canvas.width / 2 - 40, canvas.height - 40);
 
-    // Šķēršļu zīmēšana ar nelielu spīdumu
     obstacles.forEach(obs => {
         ctx.beginPath(); ctx.arc(obs.x, obs.y, obs.radius, 0, Math.PI * 2);
         ctx.fillStyle = "#3e3e4a"; ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1; ctx.stroke();
+        ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.stroke();
     });
 
+    let targetFinishCount = countries.length; 
+    if (currentEvent === "top30" && countries.length > 30) targetFinishCount = 30;
+    if (currentEvent === "half") targetFinishCount = Math.floor(countries.length / 2);
+
     marbles.forEach(m => {
-        if (m.isFinished) return;
+        if (m.isFinished || m.exploded) return;
+        
         m.vy += gravity; m.x += m.vx; m.y += m.vy;
 
         if (Math.abs(m.vx) < 0.1 && Math.abs(m.vy) < 0.2) {
             m.stuckFrames++;
-            if (m.stuckFrames > 30) { m.vx = (Math.random() - 0.5) * 4; m.vy = -1.5; m.stuckFrames = 0; }
+            if (m.stuckFrames > 20) { m.vx = (Math.random() - 0.5) * 5; m.vy = -1; m.stuckFrames = 0; }
         } else { m.stuckFrames = 0; }
 
-        if (m.x - m.radius < 0) { m.x = m.radius; m.vx *= -bounce; }
-        if (m.x + m.radius > canvas.width) { m.x = canvas.width - m.radius; m.vx *= -bounce; }
+        if (m.x - m.radius < 0) { m.x = m.radius; m.vx = Math.abs(m.vx) * bounce + 0.1; }
+        if (m.x + m.radius > canvas.width) { m.x = canvas.width - m.radius; m.vx = -Math.abs(m.vx) * bounce - 0.1; }
 
         obstacles.forEach(obs => {
             let dx = m.x - obs.x; let dy = m.y - obs.y; let distance = Math.sqrt(dx * dx + dy * dy);
@@ -399,75 +469,112 @@ function update() {
                 m.x = obs.x + (m.radius + obs.radius) * Math.cos(angle);
                 m.y = obs.y + (m.radius + obs.radius) * Math.sin(angle);
                 let speed = Math.sqrt(m.vx * m.vx + m.vy * m.vy) * bounce;
-                m.vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 1.2; m.vy = Math.sin(angle) * speed;
+                if (speed < 0.5) speed = 0.8;
+                m.vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 1.2; 
+                m.vy = Math.sin(angle) * speed;
             }
         });
 
-        if (m.y >= canvas.height - 80) { m.isFinished = true; finishedMarbles.push(m); }
+        if (m.y >= canvas.height - 80) { 
+            m.isFinished = true; 
+            finishedMarbles.push(m); 
+        }
+        
         drawCountryball(ctx, m.x, m.y, m.radius, m.code);
     });
 
-    if (finishedMarbles.length === countries.length) {
+    if (raceRunning && finishedMarbles.length >= targetFinishCount) {
+        raceRunning = false;
+        marbles.forEach(m => {
+            if (!m.isFinished) {
+                m.exploded = true;
+                createExplosion(m.x, m.y);
+            }
+        });
+        handleElimination();
+    }
+
+    if (raceRunning && finishedMarbles.length === countries.length) {
         raceRunning = false;
         handleElimination();
-        return;
     }
+
+    particles.forEach((p, index) => {
+        p.x += p.vx; p.y += p.vy; p.alpha -= 0.03;
+        if (p.alpha <= 0) { particles.splice(index, 1); return; }
+        ctx.save(); ctx.globalAlpha = p.alpha; ctx.fillStyle = "#ff3d00";
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    });
+
     requestAnimationFrame(update);
+}
+
+function logElimination(countryName, levelName, round) {
+    eliminationLogData.unshift({ name: countryName, map: levelName, round: round });
+    
+    eliminationHistory.innerHTML = eliminationLogData.map(entry => {
+        return `<div class="log-entry"><b>R${entry.round}</b> - <span class="highlight-lose">${entry.name}</span> pameta spēli kartē <span class="highlight-map">${entry.map}</span></div>`;
+    }).join('');
 }
 
 function handleElimination() {
     let eliminatedCountries = [];
     let reasonText = "";
 
-    if (currentEvent === "top30" && finishedMarbles.length > 30) {
+    if (currentEvent === "top30" && finishedMarbles.length >= 30) {
         let survivors = finishedMarbles.slice(0, 30);
-        eliminatedCountries = finishedMarbles.slice(30);
+        eliminatedCountries = countries.filter(c => !survivors.some(s => s.code === c.code));
         countries = countries.filter(c => survivors.some(s => s.code === c.code));
-        reasonText = `Trase <b>${currentLevelName}</b> atlasīja labāko trīsdesmitnieku. Likvidētas <b>${eliminatedCountries.length}</b> valstis.`;
+        reasonText = `Finišs slēgts! TOP 30 tiek tālāk.`;
     } 
     else if (currentEvent === "half") {
-        let halfSize = Math.floor(finishedMarbles.length / 2);
+        let halfSize = Math.floor(countries.length / 2);
         let survivors = finishedMarbles.slice(0, halfSize);
-        eliminatedCountries = finishedMarbles.slice(halfSize);
+        eliminatedCountries = countries.filter(c => !survivors.some(s => s.code === c.code));
         countries = countries.filter(c => survivors.some(s => s.code === c.code));
-        reasonText = `Puses eliminācija pabeigta! Kopā <b>${eliminatedCountries.length}</b> valstis pamet sacensības.`;
+        reasonText = `Grieziena beigas! 50% lēnāko valstu izslēgtas.`;
     } 
     else if (currentEvent === "triple" && finishedMarbles.length >= 3) {
-        eliminatedCountries = finishedMarbles.slice(-3);
+        eliminatedCountries = finishedMarbles.slice(-3).map(e => ({code: e.code, name: e.name}));
         let elimCodes = eliminatedCountries.map(e => e.code);
         countries = countries.filter(c => !elimCodes.includes(c.code));
-        reasonText = `Trīs pēdējās pozīcijas ieņēma un izkrīt: <b>${eliminatedCountries.map(e => e.name).join(', ')}</b>.`;
+        reasonText = `Trīs pēdējās vietas pamet turnīru.`;
     } 
     else {
         let loser = finishedMarbles[finishedMarbles.length - 1];
-        eliminatedCountries.push(loser);
+        eliminatedCountries.push({code: loser.code, name: loser.name});
         countries = countries.filter(c => c.code !== loser.code);
-        reasonText = `Zaudējumu piedzīvo un no turnīra izstājas: <span class="highlight-lose">${loser.name}</span>.`;
+        reasonText = `Pēdējā bumba tika eliminēta.`;
     }
+
+    // Pievienojam visas nule izslēgtās valstis labās malas žurnālā
+    eliminatedCountries.forEach(ec => {
+        logElimination(ec.name, currentLevelName, roundCounter);
+    });
 
     let predictionText = "";
     if (currentPrediction) {
         let isEliminated = eliminatedCountries.some(e => e.code === currentPrediction);
         if (isEliminated) {
-            predictionText = "<br><span class=\"highlight-lose\">🛑 Tava izvēlētā valsts tika eliminēta! Spēle beigusies.</span>";
-        } else if (finishedMarbles[0].code === currentPrediction) {
-            predictionText = "<br><span class=\"highlight-win\">⭐ Izcili! Tava favorītvalsts izcīnīja 1. vietu šajā raundā!</span>";
+            predictionText = "<br><span class=\"highlight-lose\">🛑 Tava izvēlētā valsts nupat izkrita!</span>";
+        } else if (finishedMarbles[0] && finishedMarbles[0].code === currentPrediction) {
+            predictionText = "<br><span class=\"highlight-win\">⭐ Izcili! Tava valsts uzvarēja raundu!</span>";
         } else {
-            predictionText = "<br><span class=\"highlight-win\">🔹 Tava valsts veiksmīgi kvalificējās nākamajam posmam.</span>";
+            predictionText = "<br><span class=\"highlight-win\">🔹 Tava valsts kvalificējās.</span>";
         }
     }
 
     if (countries.length > 1) {
-        leaderboard.innerHTML = `${reasonText}${predictionText}<br><br><b>Arēnā palikušas: ${countries.length} valstis.</b>`;
+        roundStatusLog.innerHTML = `${reasonText}${predictionText}<br><br><b>Palikušas valstis: ${countries.length}</b>`;
         updatePredictSelect();
         rollNextEvent();
     } else {
         let finalWinner = countries[0];
-        eventDisplay.innerText = "FINĀLS NOSLĒDZIES!";
+        eventDisplay.innerText = "TURNĪRS BEIDZIES!";
         if (currentPrediction === finalWinner.code) {
-            leaderboard.innerHTML = `🎉 <b>GRANDIOZAIS FINĀLS IR BEIDZIES!</b><br>👑 <b>PAR PASAULES ČEMPIONU KĻŪST ${finalWinner.name}!</b><br>Tavs pareģojums piepildījās! Apsveicam! 🏆`;
+            roundStatusLog.innerHTML = `👑 <b>ČEMPIONS: ${finalWinner.name}!</b><br>Tava prognoze bija uzvarošā! 🏆`;
         } else {
-            leaderboard.innerHTML = `🎉 <b>GRANDIOZAIS FINĀLS IR BEIDZIES!</b><br>👑 <b>PAR PASAULES ČEMPIONU KĻŪST ${finalWinner.name}!</b>`;
+            roundStatusLog.innerHTML = `👑 <b>ČEMPIONS: ${finalWinner.name}!</b>`;
         }
     }
 }
