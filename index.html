@@ -2,7 +2,7 @@
 <html lang="lv">
 <head>
     <meta charset="UTF-8">
-    <title>Pasaules eliminācijas turnīrs - Visas valstis</title>
+    <title>Pasaules turnīrs - 10 Jaunas Kartes</title>
     <style>
         body {
             background-color: #222;
@@ -21,38 +21,47 @@
         #ui {
             margin-top: 15px;
         }
-        button {
-            padding: 10px 20px;
+        button, select {
+            padding: 10px 15px;
             font-size: 16px;
             font-weight: bold;
-            background-color: #4CAF50;
-            color: white;
             border: none;
             border-radius: 5px;
-            cursor: pointer;
             margin: 5px;
         }
+        button { background-color: #4CAF50; color: white; cursor: pointer; }
         button:hover { background-color: #45a049; }
-        .shake-btn { background-color: #ff9800; }
-        .shake-btn:hover { background-color: #e68a00; }
+        select { background-color: #fff; color: #000; cursor: pointer; }
+        #eventDisplay {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff9800;
+            margin: 10px 0;
+            min-height: 30px;
+        }
         #leaderboard {
-            margin-top: 15px;
             font-size: 18px;
             line-height: 1.5;
             max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
+            margin: 15px auto;
         }
     </style>
 </head>
 <body>
 
-    <h1>Pasaules Eliminācijas Turnīrs (195 Valstis)</h1>
-    <canvas id="raceCanvas" width="800" height="750"></canvas>
+    <h1>Pasaules Eliminācija (10 Unikālas Kartes)</h1>
+    
+    <div id="predictionArea">
+        <label for="countryPredict" style="font-size: 18px;">Tava prognoze uz čempionu: </label>
+        <select id="countryPredict"><option value="">Izvēlies valsti...</option></select>
+    </div>
+
+    <div id="eventDisplay">Gatavs startam!</div>
+
+    <canvas id="raceCanvas" width="800" height="700"></canvas>
     
     <div id="ui">
         <button onclick="startRace()">Sākt raundu</button>
-        <button class="shake-btn" onclick="shakeMarbles()">Pakratīt bumbas (Antistuck)</button>
         <div id="leaderboard">Ielādē visas pasaules valstis...</div>
     </div>
 
@@ -60,11 +69,17 @@
 const canvas = document.getElementById('raceCanvas');
 const ctx = canvas.getContext('2d');
 const leaderboard = document.getElementById('leaderboard');
+const eventDisplay = document.getElementById('eventDisplay');
+const countryPredictSelect = document.getElementById('countryPredict');
 
 const gravity = 0.14;
 const bounce = 0.45;
 
-// PILNĪGI VISAS 195 PASAULES VALSTIS (pēc ISO standarta)
+let currentEvent = "normal";
+let currentPrediction = "";
+let currentLevelName = "";
+
+// PILNĪGI VISAS 195 PASAULES VALSTIS
 let countries = [
     { code: "af", name: "Afganistāna" }, { code: "al", name: "Albānija" }, { code: "dz", name: "Alžīrija" }, { code: "ad", name: "Andora" }, { code: "ao", name: "Angola" },
     { code: "ag", name: "Antigva un Barbuda" }, { code: "ar", name: "Argentīna" }, { code: "am", name: "Armēnija" }, { code: "au", name: "Austrālija" }, { code: "at", name: "Austrija" },
@@ -107,199 +122,194 @@ let countries = [
     { code: "ve", name: "Venesuela" }, { code: "vn", name: "Vjetnama" }, { code: "ye", name: "Jemena" }, { code: "zm", name: "Zambija" }, { code: "zw", name: "Zimbabve" }
 ];
 
-let marbles = [];
-let finishedMarbles = [];
-let obstacles = [];
-let raceRunning = false;
-let currentLevelName = "";
-let flagImages = {};
+let marbles = []; let finishedMarbles = []; let obstacles = []; let raceRunning = false; let flagImages = {};
+
+function updatePredictSelect() {
+    let currentChosen = countryPredictSelect.value;
+    countryPredictSelect.innerHTML = '<option value="">Izvēlies valsti...</option>';
+    let sorted = [...countries].sort((a,b) => a.name.localeCompare(b.name));
+    sorted.forEach(c => {
+        let opt = document.createElement('option'); opt.value = c.code; opt.innerText = c.name;
+        if(c.code === currentChosen) opt.selected = true;
+        countryPredictSelect.appendChild(opt);
+    });
+}
 
 function preloadFlags(callback) {
-    let loaded = 0;
-    let total = countries.length;
-    leaderboard.innerHTML = "Notiek 195 valstu karogu ielāde no tīmekļa...";
-    
+    let loaded = 0; let total = countries.length;
     countries.forEach(c => {
-        let img = new Image();
-        img.src = `https://flagcdn.com/w80/${c.code}.png`;
-        img.onload = () => {
-            flagImages[c.code] = img;
-            loaded++;
-            if (loaded === total) callback();
-        };
-        img.onerror = () => {
-            flagImages[c.code] = new Image();
-            loaded++;
-            if (loaded === total) callback();
-        };
+        let img = new Image(); img.src = `https://flagcdn.com/w80/${c.code}.png`;
+        img.onload = () => { loaded++; if (loaded === total) callback(); };
+        img.onerror = () => { loaded++; if (loaded === total) callback(); };
+        flagImages[c.code] = img;
     });
 }
 
 preloadFlags(() => {
-    leaderboard.innerHTML = `Visi karogi veiksmīgi ielādēti!<br>Gatavas startam ir visas <b>${countries.length}</b> pasaules valstis. Spied pogu!`;
+    leaderboard.innerHTML = `Visi karogi gatavi! Izvēlies savu favorītu un sāc spēli!`;
+    updatePredictSelect();
+    rollNextEvent();
 });
 
 function drawCountryball(ctx, x, y, radius, code) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.clip();
-
+    ctx.save(); ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.clip();
     let img = flagImages[code];
-    if (img && img.complete) {
-        ctx.drawImage(img, x - radius, y - radius, radius * 2, radius * 2);
-    } else {
-        ctx.fillStyle = "#666";
-        ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
-    }
-
+    if (img && img.complete) ctx.drawImage(img, x - radius, y - radius, radius * 2, radius * 2);
+    else { ctx.fillStyle = "#666"; ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2); }
     ctx.restore();
-
-    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.lineWidth = 1.8; ctx.strokeStyle = "#000"; ctx.stroke();
-    
-    // Nedaudz mazākas acis, jo pašas bumbas tagad ir mazākas
+    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.lineWidth = 1.5; ctx.strokeStyle = "#000"; ctx.stroke();
     ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x - 3, y - 2, 2.5, 0, Math.PI * 2); ctx.arc(x + 3, y - 2, 2.5, 0, Math.PI * 2); ctx.fill();
     ctx.lineWidth = 0.8; ctx.strokeStyle = "#000"; ctx.stroke();
 }
 
-// Trases dizaini (Optimizēti lielam daudzumam un 800px platumam)
-function generateClassicLevel() {
-    currentLevelName = "Globālais tapu labirints";
-    for (let row = 0; row < 7; row++) {
-        let cols = row % 2 === 0 ? 8 : 7;
-        let xOffset = row % 2 === 0 ? 90 : 140;
-        for (let col = 0; col < cols; col++) {
-            obstacles.push({ x: xOffset + col * 90, y: 220 + row * 65, radius: 8 });
+// 🗺️ 10 PILNĪGI JAUNAS UN DAŽĀDAS KARTES
+function createRandomMap() {
+    obstacles = [];
+    const mapID = Math.floor(Math.random() * 10);
+
+    if (mapID === 0) {
+        currentLevelName = "1. Pīlāru Haoss";
+        for (let i = 0; i < 6; i++) {
+            for (let j = 0; j < 6; j++) obstacles.push({ x: 130 + i * 110, y: 220 + j * 65, radius: 10 });
         }
+    } else if (mapID === 1) {
+        currentLevelName = "2. Dubultais Piltuves Slazds";
+        obstacles.push({ x: 250, y: 250, radius: 90 }, { x: 550, y: 250, radius: 90 });
+        obstacles.push({ x: 400, y: 440, radius: 70 });
+        for (let i = 0; i < 6; i++) obstacles.push({ x: 100 + i * 120, y: 590, radius: 8 });
+    } else if (mapID === 2) {
+        currentLevelName = "3. Dimantu Kaskāde";
+        let rows = [4, 5, 4, 3];
+        rows.forEach((count, rIdx) => {
+            let startX = 400 - ((count - 1) * 50);
+            for (let c = 0; c < count; c++) obstacles.push({ x: startX + c * 100, y: 230 + rIdx * 90, radius: 14 });
+        });
+    } else if (mapID === 3) {
+        currentLevelName = "4. Mega Zig-Zag Labirints";
+        obstacles.push({ x: 180, y: 240, radius: 85 }, { x: 620, y: 380, radius: 85 }, { x: 180, y: 520, radius: 85 });
+        for (let i = 0; i < 4; i++) obstacles.push({ x: 400, y: 280 + i * 90, radius: 9 });
+    } else if (mapID === 4) {
+        currentLevelName = "5. Plinko Siena";
+        for (let r = 0; r < 7; r++) {
+            let cols = r % 2 === 0 ? 9 : 8;
+            let xOff = r % 2 === 0 ? 60 : 105;
+            for (let c = 0; c < cols; c++) obstacles.push({ x: xOff + c * 85, y: 220 + r * 55, radius: 6 });
+        }
+    } else if (mapID === 5) {
+        currentLevelName = "6. Krusta Šķērsļi";
+        for (let i = 0; i < 7; i++) {
+            obstacles.push({ x: 140 + i * 85, y: 350, radius: 12 });
+            obstacles.push({ x: 400, y: 200 + i * 55, radius: 12 });
+        }
+    } else if (mapID === 6) {
+        currentLevelName = "7. Šaurie Gaiteņi";
+        for (let i = 1; i < 5; i++) {
+            obstacles.push({ x: i * 160, y: 250, radius: 35 });
+            obstacles.push({ x: i * 160 - 80, y: 450, radius: 35 });
+            obstacles.push({ x: i * 160, y: 580, radius: 15 });
+        }
+    } else if (mapID === 7) {
+        currentLevelName = "8. Centrālais Gredzens";
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+            obstacles.push({ x: 400 + Math.cos(a) * 140, y: 380 + Math.sin(a) * 140, radius: 12 });
+            obstacles.push({ x: 400 + Math.cos(a) * 240, y: 380 + Math.sin(a) * 240, radius: 8 });
+        }
+        obstacles.push({ x: 400, y: 380, radius: 25 });
+    } else if (mapID === 8) {
+        currentLevelName = "9. Viļņveida Sienas";
+        for (let x = 50; x < 800; x += 90) {
+            let waveY = 350 + Math.sin(x * 0.02) * 120;
+            obstacles.push({ x: x, y: waveY, radius: 18 });
+            obstacles.push({ x: x, y: waveY - 130, radius: 10 });
+            obstacles.push({ x: x, y: waveY + 130, radius: 10 });
+        }
+    } else {
+        currentLevelName = "10. Sadursmes Lielie Bloki";
+        obstacles.push({ x: 150, y: 300, radius: 60 }, { x: 400, y: 220, radius: 50 }, { x: 650, y: 300, radius: 60 });
+        obstacles.push({ x: 280, y: 480, radius: 55 }, { x: 520, y: 480, radius: 55 });
     }
 }
 
-function generateZigZagLevel() {
-    currentLevelName = "Pasaules Zig-Zag Trase";
-    obstacles.push({ x: 150, y: 220, radius: 75 });
-    obstacles.push({ x: 650, y: 340, radius: 75 });
-    obstacles.push({ x: 150, y: 460, radius: 75 });
-    obstacles.push({ x: 650, y: 580, radius: 75 });
-    for (let i = 0; i < 5; i++) obstacles.push({ x: 400, y: 240 + i * 90, radius: 8 });
-}
-
-function generateDiamondLevel() {
-    currentLevelName = "Kontinentālie Dimanti";
-    obstacles.push({ x: 400, y: 220, radius: 50 });
-    obstacles.push({ x: 220, y: 370, radius: 40 });
-    obstacles.push({ x: 580, y: 370, radius: 40 });
-    obstacles.push({ x: 400, y: 520, radius: 50 });
-    obstacles.push({ x: 50, y: 420, radius: 20 });
-    obstacles.push({ x: 750, y: 420, radius: 20 });
-}
-
-function createRandomMap() {
-    obstacles = []; 
-    const randomChoice = Math.floor(Math.random() * 3);
-    if (randomChoice === 0) generateClassicLevel();
-    else if (randomChoice === 1) generateZigZagLevel();
-    else generateDiamondLevel();
-}
-
-function setupMarbles() {
-    marbles = countries.map((country, index) => ({
-        ...country,
-        // 195 bumbiņas tiek sakārtotas blīvās rindās pa 22 bumbām katrā
-        x: 60 + ((index % 22) * 32) + (Math.random() - 0.5) * 6,
-        y: 30 + Math.floor(index / 22) * 26,
-        vx: (Math.random() - 0.5) * 2.5,
-        vy: 0,
-        radius: 11, // Optimāls izmērs, lai satilptu visi 195
-        isFinished: false,
-        stuckFrames: 0
-    }));
-    finishedMarbles = [];
-}
-
-function shakeMarbles() {
-    if (!raceRunning) return;
-    marbles.forEach(m => {
-        if (!m.isFinished) {
-            m.vx += (Math.random() - 0.5) * 6;
-            m.vy -= Math.random() * 4 + 2;
-        }
-    });
+function rollNextEvent() {
+    if (countries.length <= 1) return;
+    let dice = Math.random();
+    if (countries.length > 50 && dice < 0.35) {
+        currentEvent = "top30";
+        eventDisplay.innerHTML = "🏆 EVENTS: Tikai TOP 30 tiek tālāk! Pārējās izkrīt!";
+    } else if (countries.length > 20 && dice > 0.35 && dice < 0.60) {
+        currentEvent = "half";
+        eventDisplay.innerHTML = "🪓 EVENTS: Brutālā puse! Puse ātrāko izdzīvo, pēdējā puse izkrīt!";
+    } else if (countries.length > 5 && dice > 0.60 && dice < 0.80) {
+        currentEvent = "triple";
+        eventDisplay.innerHTML = "❌ EVENTS: Trīskāršā eliminācija! Pēdējās 3 valstis izkrīt!";
+    } else {
+        currentEvent = "normal";
+        eventDisplay.innerHTML = "🛡️ EVENTS: Klasiskā cīņa. Tikai pati pēdējā valsts izkrīt.";
+    }
 }
 
 function startRace() {
     if (raceRunning) return;
     if (countries.length <= 1) {
-        leaderboard.innerHTML = `Turnīrs noslēdzies! Pasaules valdnieks ir 👑 <b>${countries[0].name}</b>!`;
+        leaderboard.innerHTML = `Turnīrs noslēdzies! Uzvarētājs ir 👑 <b>${countries[0].name}</b>!`;
         return;
     }
-    createRandomMap(); 
-    setupMarbles();
+    
+    currentPrediction = countryPredictSelect.value;
+    createRandomMap(); // Katru reizi uzģenerē pavisam citu karti no 10 variantiem
+    
+    marbles = countries.map((country, index) => ({
+        ...country,
+        x: 60 + ((index % 22) * 32) + (Math.random() - 0.5) * 5,
+        y: 30 + Math.floor(index / 22) * 26,
+        vx: (Math.random() - 0.5) * 2, vy: 0, radius: 11, isFinished: false, stuckFrames: 0
+    }));
+    
+    finishedMarbles = [];
     raceRunning = true;
-    leaderboard.innerHTML = `Trase: <b>${currentLevelName}</b><br>Kopā startē ${countries.length} valstis. Bumbiņas ripo...`;
     update();
 }
 
 function update() {
     if (!raceRunning) return;
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Kartiņas nosaukuma fons
     ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
     ctx.font = "bold 32px Arial";
     ctx.fillText(currentLevelName.toUpperCase(), 40, 160);
 
-    ctx.fillStyle = "#555";
-    ctx.fillRect(0, canvas.height - 80, canvas.width, 10);
-    ctx.fillStyle = "#fff";
-    ctx.font = "14px Arial";
-    ctx.fillText("FINIŠA ZONA", canvas.width / 2 - 45, canvas.height - 50);
+    ctx.fillStyle = "#555"; ctx.fillRect(0, canvas.height - 80, canvas.width, 10);
+    ctx.fillStyle = "#fff"; ctx.font = "14px Arial"; ctx.fillText("FINIŠA ZONA", canvas.width / 2 - 45, canvas.height - 50);
 
-    ctx.fillStyle = "#888";
     obstacles.forEach(obs => {
-        ctx.beginPath(); ctx.arc(obs.x, obs.y, obs.radius, 0, Math.PI * 2); ctx.fill(); ctx.closePath();
+        ctx.beginPath(); ctx.arc(obs.x, obs.y, obs.radius, 0, Math.PI * 2); ctx.fillStyle = "#888"; ctx.fill();
     });
 
     marbles.forEach(m => {
         if (m.isFinished) return;
-
         m.vy += gravity; m.x += m.vx; m.y += m.vy;
 
-        // Antistuck
         if (Math.abs(m.vx) < 0.1 && Math.abs(m.vy) < 0.2) {
             m.stuckFrames++;
-            if (m.stuckFrames > 35) {
-                m.vx = (Math.random() - 0.5) * 5;
-                m.vy = -2;
-                m.stuckFrames = 0;
-            }
-        } else {
-            m.stuckFrames = 0;
-        }
+            if (m.stuckFrames > 30) { m.vx = (Math.random() - 0.5) * 4; m.vy = -1.5; m.stuckFrames = 0; }
+        } else { m.stuckFrames = 0; }
 
         if (m.x - m.radius < 0) { m.x = m.radius; m.vx *= -bounce; }
         if (m.x + m.radius > canvas.width) { m.x = canvas.width - m.radius; m.vx *= -bounce; }
 
         obstacles.forEach(obs => {
-            let dx = m.x - obs.x;
-            let dy = m.y - obs.y;
-            let distance = Math.sqrt(dx * dx + dy * dy);
-
+            let dx = m.x - obs.x; let dy = m.y - obs.y; let distance = Math.sqrt(dx * dx + dy * dy);
             if (distance < m.radius + obs.radius) {
                 let angle = Math.atan2(dy, dx);
                 m.x = obs.x + (m.radius + obs.radius) * Math.cos(angle);
                 m.y = obs.y + (m.radius + obs.radius) * Math.sin(angle);
-                
                 let speed = Math.sqrt(m.vx * m.vx + m.vy * m.vy) * bounce;
-                m.vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 2;
-                m.vy = Math.sin(angle) * speed;
+                m.vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 1.5; m.vy = Math.sin(angle) * speed;
             }
         });
 
-        if (m.y >= canvas.height - 80) {
-            m.isFinished = true;
-            finishedMarbles.push(m);
-        }
-
+        if (m.y >= canvas.height - 80) { m.isFinished = true; finishedMarbles.push(m); }
         drawCountryball(ctx, m.x, m.y, m.radius, m.code);
     });
 
@@ -308,18 +318,63 @@ function update() {
         handleElimination();
         return;
     }
-
     requestAnimationFrame(update);
 }
 
 function handleElimination() {
-    let loser = finishedMarbles[finishedMarbles.length - 1];
-    countries = countries.filter(c => c.code !== loser.code);
+    let eliminatedCountries = [];
+    let reasonText = "";
+
+    if (currentEvent === "top30" && finishedMarbles.length > 30) {
+        let survivors = finishedMarbles.slice(0, 30);
+        eliminatedCountries = finishedMarbles.slice(30);
+        countries = countries.filter(c => survivors.some(s => s.code === c.code));
+        reasonText = `Kartē <b>${currentLevelName}</b> tālāk tika tikai TOP 30! Izkrita <b>${eliminatedCountries.length}</b> valstis.`;
+    } 
+    else if (currentEvent === "half") {
+        let halfSize = Math.floor(finishedMarbles.length / 2);
+        let survivors = finishedMarbles.slice(0, halfSize);
+        eliminatedCountries = finishedMarbles.slice(halfSize);
+        countries = countries.filter(c => survivors.some(s => s.code === c.code));
+        reasonText = `Brutālais pusītes raunds! Izkrita <b>${eliminatedCountries.length}</b> lēnākās valstis.`;
+    } 
+    else if (currentEvent === "triple" && finishedMarbles.length >= 3) {
+        eliminatedCountries = finishedMarbles.slice(-3);
+        let elimCodes = eliminatedCountries.map(e => e.code);
+        countries = countries.filter(c => !elimCodes.includes(c.code));
+        reasonText = `Trīs pēdējās valstis (<b>${eliminatedCountries.map(e => e.name).join(', ')}</b>) palika pēdējās un izkrīt!`;
+    } 
+    else {
+        let loser = finishedMarbles[finishedMarbles.length - 1];
+        eliminatedCountries.push(loser);
+        countries = countries.filter(c => c.code !== loser.code);
+        reasonText = `❌ <b>${loser.name}</b> finišēja pēdējā trasē "${currentLevelName}" un izkrīt!`;
+    }
+
+    let predictionText = "";
+    if (currentPrediction) {
+        let isEliminated = eliminatedCountries.some(e => e.code === currentPrediction);
+        if (isEliminated) {
+            predictionText = "<br>🔴 <b>Ak nē! Tava favorītvalsts tikko izkrita!</b>";
+        } else if (finishedMarbles[0].code === currentPrediction) {
+            predictionText = "<br>🟢 <b>Lieliski! Tava valsts uzvarēja šo raundu un brauc tālāk!</b>";
+        } else {
+            predictionText = "<br>🟡 Tava izvēlētā valsts izglābās un tiek tālāk.";
+        }
+    }
 
     if (countries.length > 1) {
-        leaderboard.innerHTML = `❌ <b>${loser.name}</b> finišēja pēdējā un izkrīt no pasaules kausa!<br>Palikušas ${countries.length} valstis. Spied pogu nākamajai kārtai!`;
+        leaderboard.innerHTML = `${reasonText}${predictionText}<br><br><b>Palikušas ${countries.length} pasaules valstis.</b>`;
+        updatePredictSelect();
+        rollNextEvent();
     } else {
-        leaderboard.innerHTML = `🎉 PASAULES TURNĪRS IR NOSLĒDZIES!<br>👑 <b>PASAULES VALDNIEKS IR ${countries[0].name}!</b>`;
+        let finalWinner = countries[0];
+        eventDisplay.innerText = "TURNĪRA BEIGAS!";
+        if (currentPrediction === finalWinner.code) {
+            leaderboard.innerHTML = `🎉 <b>TURNĪRS NOSLĒDZIES!</b><br>👑 <b>UZVARĒTĀJS IR ${finalWinner.name}!</b><br>Tava prognoze izrādījās pareiza! Tu uzvarēji! 🏆`;
+        } else {
+            leaderboard.innerHTML = `🎉 <b>TURNĪRS NOSLĒDZIES!</b><br>👑 <b>PASAULES VALDNIEKS IR ${finalWinner.name}!</b>`;
+        }
     }
 }
 </script>
