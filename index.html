@@ -2,7 +2,8 @@
 <html lang="lv">
 <head>
     <meta charset="UTF-8">
-    <title>Pasaules Eliminācijas Turnīrs — Pro Versija</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pasaules Eliminācijas Turnīrs — Pro Mobile</title>
     <style>
         :root {
             --bg-color: #121214;
@@ -18,154 +19,158 @@
             color: var(--text-main);
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             min-height: 100vh;
             box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         h1 {
-            font-size: 2rem;
+            font-size: 1.4rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            margin: 0 0 20px 0;
+            letter-spacing: 1px;
+            margin: 0 0 10px 0;
             background: linear-gradient(90deg, #00b0ff, #00e676);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-align: center;
         }
 
+        /* Responsīvs trīs kolonnu izkārtojums, kas pielāgots horizontālam ekrānam */
         .game-layout {
             display: flex;
-            max-width: 1500px;
+            max-width: 100%;
             margin: 0 auto;
-            gap: 20px;
-            align-items: flex-start;
+            gap: 10px;
+            align-items: stretch;
+            height: calc(100vh - 50px);
         }
 
+        /* Kreisais panelis iestatījumiem */
         .left-panel {
             flex: 1;
-            min-width: 250px;
+            min-width: 200px;
+            max-width: 240px;
             background: var(--panel-bg);
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.05);
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
+            font-size: 12px;
         }
 
+        /* Centrs ar Canvas spēles laukumu */
         .center-panel {
             flex: 2;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
         }
 
+        /* Labais panelis izslēgšanas vēsturei */
         .right-panel {
             flex: 1;
-            min-width: 320px;
+            min-width: 220px;
+            max-width: 260px;
             background: var(--panel-bg);
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.05);
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            max-height: 700px;
+            gap: 8px;
         }
 
         .panel-title {
-            font-size: 16px;
+            font-size: 13px;
             font-weight: 800;
             text-transform: uppercase;
             color: var(--accent-blue);
-            margin-bottom: 5px;
+            margin-bottom: 2px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 5px;
+            padding-bottom: 3px;
             text-align: left;
         }
 
         #predictionArea {
             background: rgba(255,255,255,0.03);
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
+            padding: 8px;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 5px;
             text-align: left;
         }
 
         select {
-            padding: 10px;
-            font-size: 15px;
+            padding: 8px;
+            font-size: 13px;
             font-weight: 700;
             background: #26262b;
             color: white;
             border: 1px solid #3e3e46;
-            border-radius: 8px;
-            cursor: pointer;
+            border-radius: 6px;
             outline: none;
             width: 100%;
+            box-sizing: border-box;
         }
 
         #eventDisplay {
-            font-size: 15px;
+            font-size: 12px;
             font-weight: 700;
             color: #fff;
             background: linear-gradient(90deg, rgba(255,145,0,0.15) 0%, rgba(255,145,0,0.02) 100%);
-            border-left: 4px solid var(--accent-orange);
-            padding: 12px;
-            border-radius: 4px 8px 8px 4px;
+            border-left: 3px solid var(--accent-orange);
+            padding: 8px;
+            border-radius: 4px;
             text-align: left;
         }
 
+        /* Canvas automātiski mērogojas pēc ekrāna augstuma un platuma */
         canvas {
             background: #1e1e24;
             border: 1px solid #2d2d35;
-            border-radius: 12px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            border-radius: 10px;
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
         }
 
         button {
-            padding: 14px;
-            font-size: 16px;
+            padding: 10px;
+            font-size: 13px;
             font-weight: 800;
             text-transform: uppercase;
             background: linear-gradient(135deg, #00e676 0%, #00b0ff 100%);
             color: #05190e;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(0, 230, 118, 0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
             width: 100%;
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(0, 230, 118, 0.5);
-        }
-
         #roundStatusLog {
-            font-size: 14px;
+            font-size: 12px;
             background: rgba(0,0,0,0.2);
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.02);
+            padding: 8px;
+            border-radius: 6px;
             color: #ccc;
             text-align: left;
+            overflow-y: auto;
         }
 
         #eliminationHistory {
-            font-size: 13px;
-            line-height: 1.5;
+            font-size: 12px;
             background: rgba(0,0,0,0.3);
-            padding: 10px;
-            border-radius: 8px;
+            padding: 8px;
+            border-radius: 6px;
             color: #aaa;
             text-align: left;
             overflow-y: auto;
@@ -173,9 +178,9 @@
         }
 
         .round-block {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             background: rgba(255, 255, 255, 0.02);
-            padding: 8px;
+            padding: 6px;
             border-radius: 6px;
             border-left: 3px solid #ff5252;
         }
@@ -183,28 +188,62 @@
         .round-block-title {
             font-weight: bold;
             color: #fff;
-            font-size: 13px;
+            font-size: 11px;
             margin-bottom: 4px;
         }
 
         .log-entry {
-            padding: 2px 0;
+            padding: 3px 0;
             border-bottom: 1px solid rgba(255,255,255,0.02);
             display: flex;
             justify-content: space-between;
+            font-size: 11px;
         }
 
         .elim-index {
             color: #ff9100;
             font-weight: bold;
-            margin-right: 6px;
+            margin-right: 5px;
         }
 
         .highlight-lose { color: #ff5252; font-weight: 500; }
-        .highlight-map { color: #888; font-size: 11px; }
+        .highlight-win { color: var(--accent-green); font-weight: bold; }
+        .highlight-map { color: #888; font-size: 10px; }
+
+        /* OBLIGĀTĀ HORIZONTĀLĀ REŽĪMA BRĪDINĀJUMS (OVERLAY) */
+        #turnDeviceOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #0f0f12;
+            z-index: 9999;
+            color: white;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Ja ekrāns ir vertikāls (Portrait), parādām rotācijas brīdinājumu un paslēpjam spēli */
+        @media screen and (orientation: portrait) {
+            #turnDeviceOverlay {
+                display: flex;
+            }
+            .game-layout, h1 {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
+
+<div id="turnDeviceOverlay">
+    <div style="font-size: 45px; transform: rotate(-90deg); margin-bottom: 15px;">📱➔📟</div>
+    <h2 style="margin: 5px 0;">Lūdzu, pagrieziet ierīci!</h2>
+    <p style="color: #888; font-size: 14px; max-width: 280px; margin: 5px auto 0 auto;">Lai redzētu sacensības un rezultātu tabulu pilnvērtīgi, ir nepieciešams horizontālais režīms.</p>
+</div>
 
 <h1>Pasaules Eliminācijas Turnīrs</h1>
 
@@ -212,11 +251,11 @@
     <div class="left-panel">
         <div class="panel-title">Iestatījumi</div>
         <div id="predictionArea">
-            <label for="countryPredict">Tava prognoze uz čempionu:</label>
-            <select id="countryPredict"><option value="">Izvēlies valsti...</option></select>
+            <label for="countryPredict">Tava prognoze:</label>
+            <select id="countryPredict"><option value="">Izvēlies...</option></select>
         </div>
 
-        <div id="eventDisplay">Sistēma gatava. Gaidām startu...</div>
+        <div id="eventDisplay">Sistēma gatava.</div>
         
         <button onclick="startRace()">Sākt raundu</button>
         
@@ -250,9 +289,8 @@ let currentPrediction = "";
 let currentLevelName = "";
 let roundCounter = 0;
 let particles = [];
-let roundBlocksHTML = []; // Glabā HTML blokus katram raundam
+let roundBlocksHTML = []; 
 
-// PASAULES VALSTIS
 let countries = [
     { code: "af", name: "Afganistāna" }, { code: "al", name: "Albānija" }, { code: "dz", name: "Alžīrija" }, { code: "ad", name: "Andora" }, { code: "ao", name: "Angola" },
     { code: "ag", name: "Antigva un Barbuda" }, { code: "ar", name: "Argentīna" }, { code: "am", name: "Armēnija" }, { code: "au", name: "Austrālija" }, { code: "at", name: "Austrija" },
@@ -526,7 +564,6 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Funkcija, kas saņem precīzi sakārtotu sarakstu un izvada ekrānā secību (1., 2., 3...)
 function writeEliminationBlock(roundNum, mapName, orderedLosers) {
     let entriesHTML = orderedLosers.map((c, index) => {
         return `<div class="log-entry">
@@ -539,7 +576,7 @@ function writeEliminationBlock(roundNum, mapName, orderedLosers) {
                     ${entriesHTML}
                  </div>`;
                  
-    roundBlocksHTML.unshift(block); // Jaunākos raundus liekam augšā
+    roundBlocksHTML.unshift(block); 
     eliminationHistory.innerHTML = roundBlocksHTML.join('');
 }
 
@@ -549,7 +586,6 @@ function handleElimination() {
 
     if (currentEvent === "top30" && finishedMarbles.length >= 30) {
         let survivors = finishedMarbles.slice(0, 30);
-        // Atlasām tos, kas uzsprāga, un sakārtojam pēc Y pozīcijas (vislēnākie / zemākie augšgalā kā pirmie kritušie)
         let losers = marbles.filter(m => !survivors.some(s => s.code === m.code));
         losers.sort((a, b) => a.y - b.y); 
         
@@ -568,7 +604,6 @@ function handleElimination() {
         reasonText = `Grieziena beigas! Lēnākā puse uzsprāga.`;
     } 
     else if (currentEvent === "triple" && finishedMarbles.length >= 3) {
-        // Trīs pēdējie finišētāji. Sakārtojam tā, ka pēdējā vieta ir pirmais sarakstā
         let losers = finishedMarbles.slice(-3).reverse();
         eliminatedCountries = losers.map(l => ({ code: l.code, name: l.name }));
         let elimCodes = eliminatedCountries.map(e => e.code);
@@ -582,7 +617,6 @@ function handleElimination() {
         reasonText = `Pēdējā bumba tika eliminēta.`;
     }
 
-    // Izsaucam žurnāla ierakstīšanu ar precīzo secību šim raundam
     writeEliminationBlock(roundCounter, currentLevelName, eliminatedCountries);
 
     let predictionText = "";
@@ -612,6 +646,5 @@ function handleElimination() {
     }
 }
 </script>
-
 </body>
 </html>
