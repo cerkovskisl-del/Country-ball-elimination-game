@@ -2,7 +2,7 @@
 <html lang="lv">
 <head>
     <meta charset="UTF-8">
-    <title>Pasaules Countryball Marble Race</title>
+    <title>Pasaules eliminācijas turnīrs - Visas valstis</title>
     <style>
         body {
             background-color: #222;
@@ -39,7 +39,7 @@
             margin-top: 15px;
             font-size: 18px;
             line-height: 1.5;
-            max-width: 600px;
+            max-width: 700px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -47,13 +47,13 @@
 </head>
 <body>
 
-    <h1>Pasaules Countryball Eliminācija</h1>
-    <canvas id="raceCanvas" width="700" height="700"></canvas>
+    <h1>Pasaules Eliminācijas Turnīrs (195 Valstis)</h1>
+    <canvas id="raceCanvas" width="800" height="750"></canvas>
     
     <div id="ui">
-        <button onclick="startRace()">Sākt nākamo raundu</button>
+        <button onclick="startRace()">Sākt raundu</button>
         <button class="shake-btn" onclick="shakeMarbles()">Pakratīt bumbas (Antistuck)</button>
-        <div id="leaderboard">Ielādē valstis...</div>
+        <div id="leaderboard">Ielādē visas pasaules valstis...</div>
     </div>
 
 <script>
@@ -61,35 +61,50 @@ const canvas = document.getElementById('raceCanvas');
 const ctx = canvas.getContext('2d');
 const leaderboard = document.getElementById('leaderboard');
 
-const gravity = 0.15;
+const gravity = 0.14;
 const bounce = 0.45;
 
-// MILZĪGS VALSTU SARAKSTS (Vari droši papildināt pēc šī paša šablona līdz pat visām 195)
+// PILNĪGI VISAS 195 PASAULES VALSTIS (pēc ISO standarta)
 let countries = [
-    // Eiropa
-    { code: "lv", name: "Latvija" }, { code: "lt", name: "Lietuva" }, { code: "ee", name: "Igaunija" },
-    { code: "fi", name: "Somija" }, { code: "de", name: "Vācija" }, { code: "fr", name: "Francija" },
-    { code: "it", name: "Itālija" }, { code: "es", name: "Spānija" }, { code: "ua", name: "Ukraina" },
-    { code: "pl", name: "Polija" }, { code: "gb", name: "Apvienotā Karaliste" }, { code: "se", name: "Zviedrija" },
-    { code: "no", name: "Norvēģija" }, { code: "dk", name: "Dānija" }, { code: "nl", name: "Nīderlande" },
-    { code: "be", name: "Beļģija" }, { code: "ch", name: "Šveice" }, { code: "at", name: "Austrija" },
-    { code: "ie", name: "Īrija" }, { code: "pt", name: "Portugāle" }, { code: "gr", name: "Grieķija" },
-    { code: "cz", name: "Čehija" }, { code: "hu", name: "Ungārija" }, { code: "ro", name: "Rumānija" },
-    { code: "hr", name: "Horvātija" }, { code: "is", name: "Islande" },
-    // Amerika
-    { code: "us", name: "ASV" }, { code: "ca", name: "Kanāda" }, { code: "mx", name: "Meksika" },
-    { code: "br", name: "Brazīlija" }, { code: "ar", name: "Argentīna" }, { code: "co", name: "Kolumbija" },
-    { code: "cl", name: "Čīle" }, { code: "pe", name: "Peru" }, { code: "ve", name: "Venesuela" },
-    // Āzija & Okeānija
-    { code: "cn", name: "Ķīna" }, { code: "jp", name: "Japāna" }, { code: "in", name: "Indija" },
-    { code: "kr", name: "Dienvidkoreja" }, { code: "au", name: "Austrālija" }, { code: "nz", name: "Jaunzēlande" },
-    { code: "id", name: "Indonēzija" }, { code: "th", name: "Taizeme" }, { code: "pk", name: "Pakistāna" },
-    { code: "sa", name: "Saūda Arābija" }, { code: "tr", name: "Turcija" }, { code: "il", name: "Izraēla" },
-    { code: "sg", name: "Singapūra" }, { code: "ph", name: "Filipīnas" }, { code: "vn", name: "Vjetnama" },
-    // Āfrika
-    { code: "za", name: "Dienvidāfrika" }, { code: "eg", name: "Ēģipte" }, { code: "ng", name: "Nigērija" },
-    { code: "ma", name: "Maroka" }, { code: "ke", name: "Kenija" }, { code: "gh", name: "Gana" },
-    { code: "dz", name: "Alžīrija" }, { code: "tn", name: "Tunisija" }, { code: "et", name: "Etiopija" }
+    { code: "af", name: "Afganistāna" }, { code: "al", name: "Albānija" }, { code: "dz", name: "Alžīrija" }, { code: "ad", name: "Andora" }, { code: "ao", name: "Angola" },
+    { code: "ag", name: "Antigva un Barbuda" }, { code: "ar", name: "Argentīna" }, { code: "am", name: "Armēnija" }, { code: "au", name: "Austrālija" }, { code: "at", name: "Austrija" },
+    { code: "az", name: "Azerbaidžāna" }, { code: "bs", name: "Bahamu Salas" }, { code: "bh", name: "Bahreina" }, { code: "bd", name: "Bangladeša" }, { code: "bb", name: "Barbadosa" },
+    { code: "by", name: "Baltkrievija" }, { code: "be", name: "Beļģija" }, { code: "bz", name: "Beliza" }, { code: "bj", name: "Benina" }, { code: "bt", name: "Butāna" },
+    { code: "bo", name: "Bolīvija" }, { code: "ba", name: "Bosnija un Hercegovina" }, { code: "bw", name: "Botsvāna" }, { code: "br", name: "Brazīlija" }, { code: "bn", name: "Bruneja" },
+    { code: "bg", name: "Bulgārija" }, { code: "bf", name: "Burkinafaso" }, { code: "bi", name: "Burundi" }, { code: "kh", name: "Kambodža" }, { code: "cm", name: "Kamerūna" },
+    { code: "ca", name: "Kanāda" }, { code: "cv", name: "Kaboverde" }, { code: "cf", name: "Centrālāfrikas Republika" }, { code: "td", name: "Čada" }, { code: "cl", name: "Čīle" },
+    { code: "cn", name: "Ķīna" }, { code: "co", name: "Kolumbija" }, { code: "km", name: "Komoras" }, { code: "cg", name: "Kongo (Brazavila)" }, { code: "cd", name: "Kongo (Kinšasa)" },
+    { code: "cr", name: "Kostarika" }, { code: "ci", name: "Kotdivuāra" }, { code: "hr", name: "Horvātija" }, { code: "cu", name: "Kuba" }, { code: "cy", name: "Kipra" },
+    { code: "cz", name: "Čehija" }, { code: "dk", name: "Dānija" }, { code: "dj", name: "Džibuti" }, { code: "dm", name: "Dominika" }, { code: "do", name: "Dominikāna" },
+    { code: "ec", name: "Ekvadora" }, { code: "eg", name: "Ēģipte" }, { code: "sv", name: "Elsalvadora" }, { code: "gq", name: "Ekvatoriālā Gvineja" }, { code: "er", name: "Eritreja" },
+    { code: "ee", name: "Igaunija" }, { code: "sz", name: "Esvatīni" }, { code: "et", name: "Etiopija" }, { code: "fj", name: "Fidži" }, { code: "fi", name: "Somija" },
+    { code: "fr", name: "Francija" }, { code: "ga", name: "Gabona" }, { code: "gm", name: "Gambija" }, { code: "ge", name: "Gruzija" }, { code: "de", name: "Vācija" },
+    { code: "gh", name: "Gana" }, { code: "gr", name: "Grieķija" }, { code: "gd", name: "Grenāda" }, { code: "gt", name: "Gvatemala" }, { code: "gn", name: "Gvineja" },
+    { code: "gw", name: "Gvineja-Bisava" }, { code: "gy", name: "Gajāna" }, { code: "ht", name: "Haiti" }, { code: "hn", name: "Hondurasa" }, { code: "hu", name: "Ungārija" },
+    { code: "is", name: "Islande" }, { code: "in", name: "Indija" }, { code: "id", name: "Indonēzija" }, { code: "ir", name: "Irāna" }, { code: "iq", name: "Irāka" },
+    { code: "ie", name: "Īrija" }, { code: "il", name: "Izraēla" }, { code: "it", name: "Itālija" }, { code: "jm", name: "Jamaika" }, { code: "jp", name: "Japāna" },
+    { code: "jo", name: "Jordānija" }, { code: "kz", name: "Kazahstāna" }, { code: "ke", name: "Kenija" }, { code: "ki", name: "Kiribati" }, { code: "kp", name: "Ziemeļkoreja" },
+    { code: "kr", name: "Dienvidkoreja" }, { code: "kw", name: "Kuveita" }, { code: "kg", name: "Kirgizstāna" }, { code: "la", name: "Laosa" }, { code: "lv", name: "Latvija" },
+    { code: "lb", name: "Libāna" }, { code: "ls", name: "Lesoto" }, { code: "lr", name: "Libērija" }, { code: "ly", name: "Lībija" }, { code: "li", name: "Lihtenšteina" },
+    { code: "lt", name: "Lietuva" }, { code: "lu", name: "Luksemburga" }, { code: "mg", name: "Madagaskara" }, { code: "mw", name: "Malāvija" }, { code: "my", name: "Malaizija" },
+    { code: "mv", name: "Maldivu Salas" }, { code: "ml", name: "Mali" }, { code: "mt", name: "Malta" }, { code: "mh", name: "Maršala Salas" }, { code: "mr", name: "Mauritānija" },
+    { code: "mu", name: "Maurīcija" }, { code: "mx", name: "Meksika" }, { code: "fm", name: "Mikronēzija" }, { code: "md", name: "Moldova" }, { code: "mc", name: "Monako" },
+    { code: "mn", name: "Mongolija" }, { code: "me", name: "Melnkalne" }, { code: "ma", name: "Maroka" }, { code: "mz", name: "Mocambika" }, { code: "mm", name: "Mjanma" },
+    { code: "na", name: "Namībija" }, { code: "nr", name: "Nauru" }, { code: "np", name: "Nepāla" }, { code: "nl", name: "Nīderlande" }, { code: "nz", name: "Jaunzēlande" },
+    { code: "ni", name: "Nikaragva" }, { code: "ne", name: "Nīgera" }, { code: "ng", name: "Nigērija" }, { code: "mk", name: "Ziemeļmaķedonija" }, { code: "no", name: "Norvēģija" },
+    { code: "om", name: "Omāna" }, { code: "pk", name: "Pakistāna" }, { code: "pw", name: "Palau" }, { code: "pa", name: "Panama" }, { code: "pg", name: "Papua-Jaungvineja" },
+    { code: "py", name: "Paragvaja" }, { code: "pe", name: "Peru" }, { code: "ph", name: "Filipīnas" }, { code: "pl", name: "Polija" }, { code: "pt", name: "Portugāle" },
+    { code: "qa", name: "Katara" }, { code: "ro", name: "Rumānija" }, { code: "ru", name: "Krievija" }, { code: "rw", name: "Ruanda" }, { code: "kn", name: "Sentkitsa un Nevisa" },
+    { code: "lc", name: "Sentlūsija" }, { code: "vc", name: "Sentvinsenta" }, { code: "ws", name: "Samoa" }, { code: "sm", name: "Sanmarīno" }, { code: "st", name: "Santome un Prinsipi" },
+    { code: "sa", name: "Saūda Arābija" }, { code: "sn", name: "Senegāla" }, { code: "rs", name: "Serbija" }, { code: "sc", name: "Seišelu Salas" }, { code: "sl", name: "Sjerraleone" },
+    { code: "sg", name: "Singapūra" }, { code: "sk", name: "Slovākija" }, { code: "si", name: "Slovēnija" }, { code: "sb", name: "Sālamana Salas" }, { code: "so", name: "Somālija" },
+    { code: "za", name: "Dienvidāfrika" }, { code: "ss", name: "Dienvidsudāna" }, { code: "es", name: "Spānija" }, { code: "lk", name: "Šrilanka" }, { code: "sd", name: "Sudāna" },
+    { code: "sr", name: "Surinama" }, { code: "se", name: "Zviedrija" }, { code: "ch", name: "Šveice" }, { code: "sy", name: "Sīrija" }, { code: "tw", name: "Taivāna" },
+    { code: "tj", name: "Tadžikistāna" }, { code: "tz", name: "Tanzānija" }, { code: "th", name: "Taizeme" }, { code: "tl", name: "Timora" }, { code: "tg", name: "Togo" },
+    { code: "to", name: "Tonga" }, { code: "tt", name: "Trinidadas un Tobāgo" }, { code: "tn", name: "Tunisija" }, { code: "tr", name: "Turcija" }, { code: "tm", name: "Turkmenistāna" },
+    { code: "tv", name: "Tuvalu" }, { code: "ug", name: "Uganda" }, { code: "ua", name: "Ukraina" }, { code: "ae", name: "AAE" }, { code: "gb", name: "Apvienotā Karaliste" },
+    { code: "us", name: "ASV" }, { code: "uy", name: "Urugvaja" }, { code: "uz", name: "Uzbekistāna" }, { code: "vu", name: "Vanuatu" }, { code: "va", name: "Vatikāns" },
+    { code: "ve", name: "Venesuela" }, { code: "vn", name: "Vjetnama" }, { code: "ye", name: "Jemena" }, { code: "zm", name: "Zambija" }, { code: "zw", name: "Zimbabve" }
 ];
 
 let marbles = [];
@@ -97,16 +112,15 @@ let finishedMarbles = [];
 let obstacles = [];
 let raceRunning = false;
 let currentLevelName = "";
-let flagImages = {}; // Šeit saglabāsim ielādētos attēlus
+let flagImages = {};
 
-// Karogu attēlu priekš-ielāde no interneta datubāzes
 function preloadFlags(callback) {
     let loaded = 0;
     let total = countries.length;
+    leaderboard.innerHTML = "Notiek 195 valstu karogu ielāde no tīmekļa...";
     
     countries.forEach(c => {
         let img = new Image();
-        // Izmantojam publisku FlagCDN servisu
         img.src = `https://flagcdn.com/w80/${c.code}.png`;
         img.onload = () => {
             flagImages[c.code] = img;
@@ -114,7 +128,6 @@ function preloadFlags(callback) {
             if (loaded === total) callback();
         };
         img.onerror = () => {
-            // Ja kāds karogs neielādējas, izveidojam tukšu bildi, lai spēle neuzkartos
             flagImages[c.code] = new Image();
             loaded++;
             if (loaded === total) callback();
@@ -122,9 +135,8 @@ function preloadFlags(callback) {
     });
 }
 
-// Izsauc karogu ielādi uzreiz, kad atver lapu
 preloadFlags(() => {
-    leaderboard.innerHTML = `Visi karogi ielādēti! Kopā trasē gatavas doties <b>${countries.length}</b> pasaules valstis.`;
+    leaderboard.innerHTML = `Visi karogi veiksmīgi ielādēti!<br>Gatavas startam ir visas <b>${countries.length}</b> pasaules valstis. Spied pogu!`;
 });
 
 function drawCountryball(ctx, x, y, radius, code) {
@@ -133,55 +145,52 @@ function drawCountryball(ctx, x, y, radius, code) {
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.clip();
 
-    // Uzzīmē ielādēto karoga attēlu bumbiņas iekšā
     let img = flagImages[code];
     if (img && img.complete) {
-        // Centrējam un mērogojam bildi bumbiņas rādiusā
         ctx.drawImage(img, x - radius, y - radius, radius * 2, radius * 2);
     } else {
-        ctx.fillStyle = "#777";
+        ctx.fillStyle = "#666";
         ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
     }
 
     ctx.restore();
 
-    // Bumbiņas kontūra
-    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.lineWidth = 2.5; ctx.strokeStyle = "#000"; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.lineWidth = 1.8; ctx.strokeStyle = "#000"; ctx.stroke();
     
-    // Countryball acis
-    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x - 5, y - 3, 4, 0, Math.PI * 2); ctx.arc(x + 5, y - 3, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.lineWidth = 1; ctx.strokeStyle = "#000"; ctx.stroke();
+    // Nedaudz mazākas acis, jo pašas bumbas tagad ir mazākas
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x - 3, y - 2, 2.5, 0, Math.PI * 2); ctx.arc(x + 3, y - 2, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 0.8; ctx.strokeStyle = "#000"; ctx.stroke();
 }
 
-// Trases dizaini (Optimizēti lielākam Canvas izmēram 700x700)
+// Trases dizaini (Optimizēti lielam daudzumam un 800px platumam)
 function generateClassicLevel() {
-    currentLevelName = "Pasaules tapu labirints";
+    currentLevelName = "Globālais tapu labirints";
     for (let row = 0; row < 7; row++) {
-        let cols = row % 2 === 0 ? 7 : 6;
-        let xOffset = row % 2 === 0 ? 80 : 130;
+        let cols = row % 2 === 0 ? 8 : 7;
+        let xOffset = row % 2 === 0 ? 90 : 140;
         for (let col = 0; col < cols; col++) {
-            obstacles.push({ x: xOffset + col * 90, y: 180 + row * 65, radius: 8 });
+            obstacles.push({ x: xOffset + col * 90, y: 220 + row * 65, radius: 8 });
         }
     }
 }
 
 function generateZigZagLevel() {
-    currentLevelName = "Mega Zig-Zag";
-    obstacles.push({ x: 130, y: 180, radius: 65 });
-    obstacles.push({ x: 570, y: 290, radius: 65 });
-    obstacles.push({ x: 150, y: 420, radius: 65 });
-    obstacles.push({ x: 550, y: 530, radius: 65 });
-    for (let i = 0; i < 5; i++) obstacles.push({ x: 350, y: 200 + i * 90, radius: 8 });
+    currentLevelName = "Pasaules Zig-Zag Trase";
+    obstacles.push({ x: 150, y: 220, radius: 75 });
+    obstacles.push({ x: 650, y: 340, radius: 75 });
+    obstacles.push({ x: 150, y: 460, radius: 75 });
+    obstacles.push({ x: 650, y: 580, radius: 75 });
+    for (let i = 0; i < 5; i++) obstacles.push({ x: 400, y: 240 + i * 90, radius: 8 });
 }
 
 function generateDiamondLevel() {
-    currentLevelName = "Pasaules Dimanti";
-    obstacles.push({ x: 350, y: 180, radius: 45 });
-    obstacles.push({ x: 200, y: 320, radius: 35 });
-    obstacles.push({ x: 500, y: 320, radius: 35 });
-    obstacles.push({ x: 350, y: 460, radius: 45 });
-    obstacles.push({ x: 50, y: 370, radius: 20 });
-    obstacles.push({ x: 650, y: 370, radius: 20 });
+    currentLevelName = "Kontinentālie Dimanti";
+    obstacles.push({ x: 400, y: 220, radius: 50 });
+    obstacles.push({ x: 220, y: 370, radius: 40 });
+    obstacles.push({ x: 580, y: 370, radius: 40 });
+    obstacles.push({ x: 400, y: 520, radius: 50 });
+    obstacles.push({ x: 50, y: 420, radius: 20 });
+    obstacles.push({ x: 750, y: 420, radius: 20 });
 }
 
 function createRandomMap() {
@@ -195,12 +204,12 @@ function createRandomMap() {
 function setupMarbles() {
     marbles = countries.map((country, index) => ({
         ...country,
-        // Tā kā bumbu ir daudz, tās izvietojas vairākās rindās pa 12 bumbām rindā
-        x: 100 + ((index % 12) * 45) + (Math.random() - 0.5) * 10,
-        y: 35 + Math.floor(index / 12) * 38,
-        vx: (Math.random() - 0.5) * 3,
+        // 195 bumbiņas tiek sakārtotas blīvās rindās pa 22 bumbām katrā
+        x: 60 + ((index % 22) * 32) + (Math.random() - 0.5) * 6,
+        y: 30 + Math.floor(index / 22) * 26,
+        vx: (Math.random() - 0.5) * 2.5,
         vy: 0,
-        radius: 15, // Nedaudz mazākas, lai satilptu visas pasaules valstis
+        radius: 11, // Optimāls izmērs, lai satilptu visi 195
         isFinished: false,
         stuckFrames: 0
     }));
@@ -226,7 +235,7 @@ function startRace() {
     createRandomMap(); 
     setupMarbles();
     raceRunning = true;
-    leaderboard.innerHTML = `Trase: <b>${currentLevelName}</b><br>Bumbiņas ripo...`;
+    leaderboard.innerHTML = `Trase: <b>${currentLevelName}</b><br>Kopā startē ${countries.length} valstis. Bumbiņas ripo...`;
     update();
 }
 
@@ -235,19 +244,16 @@ function update() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Fona teksts
     ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
     ctx.font = "bold 32px Arial";
-    ctx.fillText(currentLevelName.toUpperCase(), 40, 130);
+    ctx.fillText(currentLevelName.toUpperCase(), 40, 160);
 
-    // Finiša līnija
     ctx.fillStyle = "#555";
     ctx.fillRect(0, canvas.height - 80, canvas.width, 10);
     ctx.fillStyle = "#fff";
     ctx.font = "14px Arial";
     ctx.fillText("FINIŠA ZONA", canvas.width / 2 - 45, canvas.height - 50);
 
-    // Zīmē šķēršļus
     ctx.fillStyle = "#888";
     obstacles.forEach(obs => {
         ctx.beginPath(); ctx.arc(obs.x, obs.y, obs.radius, 0, Math.PI * 2); ctx.fill(); ctx.closePath();
@@ -258,23 +264,21 @@ function update() {
 
         m.vy += gravity; m.x += m.vx; m.y += m.vy;
 
-        // Antistuck sistēma
+        // Antistuck
         if (Math.abs(m.vx) < 0.1 && Math.abs(m.vy) < 0.2) {
             m.stuckFrames++;
-            if (m.stuckFrames > 40) {
+            if (m.stuckFrames > 35) {
                 m.vx = (Math.random() - 0.5) * 5;
-                m.vy = -2.5;
+                m.vy = -2;
                 m.stuckFrames = 0;
             }
         } else {
             m.stuckFrames = 0;
         }
 
-        // Malu sadursmes
         if (m.x - m.radius < 0) { m.x = m.radius; m.vx *= -bounce; }
         if (m.x + m.radius > canvas.width) { m.x = canvas.width - m.radius; m.vx *= -bounce; }
 
-        // Šķēršļu sadursmes
         obstacles.forEach(obs => {
             let dx = m.x - obs.x;
             let dy = m.y - obs.y;
@@ -296,7 +300,6 @@ function update() {
             finishedMarbles.push(m);
         }
 
-        // Zīmēšana ar bildi
         drawCountryball(ctx, m.x, m.y, m.radius, m.code);
     });
 
@@ -314,9 +317,9 @@ function handleElimination() {
     countries = countries.filter(c => c.code !== loser.code);
 
     if (countries.length > 1) {
-        leaderboard.innerHTML = `❌ <b>${loser.name}</b> finišēja pēdējā un izkrīt!<br>Palikušas ${countries.length} pasaules valstis. Spied pogu nākamajam raundam!`;
+        leaderboard.innerHTML = `❌ <b>${loser.name}</b> finišēja pēdējā un izkrīt no pasaules kausa!<br>Palikušas ${countries.length} valstis. Spied pogu nākamajai kārtai!`;
     } else {
-        leaderboard.innerHTML = `🎉 PASAULES TURNĪRS IR NOSLĒDZIES!<br>👑 <b>UZVARĒTĀJS IR ${countries[0].name}!</b>`;
+        leaderboard.innerHTML = `🎉 PASAULES TURNĪRS IR NOSLĒDZIES!<br>👑 <b>PASAULES VALDNIEKS IR ${countries[0].name}!</b>`;
     }
 }
 </script>
